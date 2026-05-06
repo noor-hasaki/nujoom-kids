@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>نجوم التعلم — منصة تعليمية للأطفال 🚀</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --space-darkest:#0d0022;--space-dark:#1a0040;--space-mid:#2d006a;
+  --space-light:#4a00a0;--space-bright:#6b21c8;
+  --yellow:#FFD700;--orange:#FF7A00;--pink:#FF3D8E;--cyan:#00D4FF;--green:#00E676;--red:#FF4757;
+  --white:#fff;--text-dark:#1a1a2e;--text-mid:#4a4a6a;
+  --r-full:9999px;--r-xl:36px;--r-lg:28px;--r:20px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Tajawal',sans-serif;background:var(--space-dark);color:#fff;overflow-x:hidden;}
+
+/* ── BG ── */
+.space-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 20% 30%,rgba(107,33,200,.5) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 70%,rgba(45,0,106,.8) 0%,transparent 55%),
+             linear-gradient(160deg,#0d0022 0%,#1a0040 35%,#2d006a 70%,#1a0040 100%);}
+#starsCanvas{position:fixed;inset:0;z-index:1;pointer-events:none;}
+
+/* ── PLANETS ── */
+.planet{position:fixed;border-radius:50%;pointer-events:none;z-index:1;animation:pfloat var(--pf,12s) ease-in-out infinite var(--pd,0s);}
+@keyframes pfloat{0%,100%{transform:translateY(0)rotate(0deg)}50%{transform:translateY(-18px)rotate(5deg)}}
+.p-saturn{width:110px;height:110px;top:8%;left:-20px;
+  background:radial-gradient(circle at 38% 35%,#ffe066,#e0a000 60%,#c47a00);
+  box-shadow:0 0 50px rgba(255,200,0,.2),inset -15px -15px 30px rgba(0,0,0,.3);
+  --pf:14s;}
+.p-saturn::before{content:'';position:absolute;width:175%;height:32%;top:34%;left:-37%;
+  border-radius:50%;border:11px solid rgba(255,200,80,.35);transform:rotateX(74deg);}
+.p-blue{width:72px;height:72px;bottom:20%;right:-15px;
+  background:radial-gradient(circle at 35% 30%,#80d8ff,#0288d1 60%,#01579b);
+  box-shadow:0 0 30px rgba(2,136,209,.3),inset -10px -10px 20px rgba(0,0,0,.3);--pf:10s;--pd:-4s;}
+.p-pink{width:50px;height:50px;top:42%;right:5%;
+  background:radial-gradient(circle at 35% 30%,#ff80ab,#e91e63 60%,#880e4f);
+  box-shadow:0 0 22px rgba(233,30,99,.3),inset -7px -7px 14px rgba(0,0,0,.3);--pf:9s;--pd:-7s;}
+.p-tiny{width:32px;height:32px;top:70%;left:8%;
+  background:radial-gradient(circle at 35% 30%,#b9f6ca,#00c853 60%,#00691c);
+  box-shadow:0 0 14px rgba(0,200,83,.3),inset -5px -5px 10px rgba(0,0,0,.3);--pf:7s;--pd:-2s;}
+
+/* Shooting star */
+.shooting{position:fixed;width:3px;height:3px;background:white;border-radius:50%;pointer-events:none;z-index:1;}
+.shooting::after{content:'';position:absolute;top:0;right:0;width:90px;height:2px;background:linear-gradient(to left,rgba(255,255,255,.6),transparent);}
+.sh1{top:15%;right:100%;animation:shoot 7s linear infinite;}
+.sh2{top:30%;right:100%;animation:shoot 7s linear infinite 3.5s;}
+@keyframes shoot{0%{transform:translateX(0)translateY(0);opacity:1}70%{opacity:1}100%{transform:translateX(-120vw)translateY(50px);opacity:0}}
+
+/* ── NAVBAR ── */
+.navbar{position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(20px);background:rgba(13,0,34,.9);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:0 28px;height:70px;display:flex;align-items:center;gap:16px;}
+.nav-logo{font-family:'Baloo Bhaijaan 2',cursive;font-size:26px;font-weight:900;
+  display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.logo-icon{font-size:32px;animation:spin-s 8s linear infinite;display:inline-block;}
+@keyframes spin-s{to{transform:rotate(360deg)}}
+.logo-text{background:linear-gradient(135deg,#FFD700,#FF7A00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-links{display:flex;gap:4px;flex:1;justify-content:center;}
+.nav-link{color:rgba(255,255,255,.7);text-decoration:none;padding:6px 14px;border-radius:999px;font-size:15px;font-weight:600;transition:all .25s;}
+.nav-link:hover{background:rgba(255,255,255,.1);color:#fff;}
+.nav-cta{background:var(--yellow);color:#1a1a2e;border:none;border-radius:999px;padding:10px 22px;
+  font-family:'Baloo Bhaijaan 2',cursive;font-size:15px;font-weight:800;cursor:pointer;
+  box-shadow:0 5px 0 #c49a00;transition:all .2s;}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 7px 0 #c49a00;}
+
+/* ── HERO ── */
+.hero-section{position:relative;z-index:2;min-height:calc(100vh - 70px);
+  display:flex;align-items:center;padding:60px 28px 40px;overflow:hidden;}
+.hero-content{flex:1;max-width:560px;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,215,0,.15);border:1.5px solid rgba(255,215,0,.35);
+  border-radius:999px;padding:7px 18px;margin-bottom:24px;
+  font-size:13px;font-weight:700;color:var(--yellow);}
+.hero-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:clamp(36px,6vw,62px);
+  font-weight:900;line-height:1.1;margin-bottom:18px;}
+.hero-title .hl-yellow{color:var(--yellow);display:block;}
+.hero-title .hl-orange{color:var(--orange);}
+.hero-title .hl-pink  {color:var(--pink);}
+.hero-desc{font-size:16px;line-height:1.8;color:rgba(255,255,255,.75);margin-bottom:32px;max-width:460px;}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:40px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-family:'Baloo Bhaijaan 2',cursive;font-weight:800;border:none;cursor:pointer;
+  text-decoration:none;border-radius:999px;padding:14px 30px;font-size:16px;
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;}
+.btn:hover{transform:translateY(-3px);}
+.btn-yellow{background:var(--yellow);color:#1a1a2e;box-shadow:0 7px 0 #c49a00,0 12px 30px rgba(255,215,0,.3);}
+.btn-yellow:hover{box-shadow:0 10px 0 #c49a00,0 16px 36px rgba(255,215,0,.4);}
+.btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:2px solid rgba(255,255,255,.25);}
+.btn-ghost:hover{background:rgba(255,255,255,.2);}
+
+/* Stats row */
+.hero-stats{display:flex;gap:28px;flex-wrap:wrap;}
+.stat-item{display:flex;flex-direction:column;}
+.stat-num{font-family:'Baloo Bhaijaan 2',cursive;font-size:28px;font-weight:900;color:var(--yellow);}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,.55);margin-top:2px;}
+
+/* Hero character area */
+.hero-character-wrap{flex:0 0 auto;width:min(400px,45vw);position:relative;
+  display:flex;align-items:center;justify-content:center;}
+/* Glow circle behind character */
+.char-glow{position:absolute;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,215,0,.18) 0%,transparent 70%);
+  animation:glow-pulse 3s ease-in-out infinite;}
+@keyframes glow-pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.1);opacity:1}}
+/* Orbit rings */
+.orbit-ring{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.1);animation:orbit-spin var(--os,20s) linear infinite;}
+.or-1{width:320px;height:320px;--os:22s;}
+.or-2{width:240px;height:240px;--os:16s;animation-direction:reverse;}
+/* Orbit dots */
+.orbit-dot{position:absolute;width:12px;height:12px;border-radius:50%;top:0;left:50%;transform:translateX(-50%) translateY(-6px);}
+.od-yellow{background:var(--yellow);box-shadow:0 0 8px var(--yellow);}
+.od-pink  {background:var(--pink);  box-shadow:0 0 8px var(--pink);}
+.od-cyan  {background:var(--cyan);  box-shadow:0 0 8px var(--cyan);}
+
+/* The astronaut character */
+.astronaut{font-size:clamp(120px,18vw,180px);
+  animation:astro-float 4s ease-in-out infinite;
+  filter:drop-shadow(0 20px 40px rgba(0,0,0,.4)) drop-shadow(0 0 30px rgba(255,215,0,.2));
+  display:block;position:relative;z-index:2;line-height:1;}
+@keyframes astro-float{0%,100%{transform:translateY(0)rotate(-4deg)}50%{transform:translateY(-18px)rotate(4deg)}}
+/* Floating items around character */
+.float-item{position:absolute;animation:item-float var(--if,5s) ease-in-out infinite var(--id,0s);}
+@keyframes item-float{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-10px) rotate(15deg)}}
+
+/* ── WAVE ── */
+.wave-divider{position:relative;z-index:3;margin-top:-1px;line-height:0;}
+.wave-divider svg{display:block;width:100%;}
+
+/* ── FEATURES SECTION (white bg) ── */
+.features-section{position:relative;z-index:3;background:#fff;padding:70px 28px;color:var(--text-dark);}
+.section-center{text-align:center;margin-bottom:50px;}
+.section-tag{display:inline-block;background:linear-gradient(135deg,#6b21c8,#a855f7);
+  color:white;border-radius:999px;padding:5px 18px;font-size:13px;font-weight:800;
+  font-family:'Baloo Bhaijaan 2',cursive;margin-bottom:12px;}
+.section-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:clamp(28px,4vw,42px);
+  font-weight:900;color:var(--text-dark);margin-bottom:10px;line-height:1.2;}
+.section-sub{font-size:16px;color:#6b7280;max-width:520px;margin:0 auto;line-height:1.7;}
+
+.features-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px;max-width:960px;margin:0 auto;}
+@media(max-width:620px){.features-grid{grid-template-columns:1fr;}}
+.feature-card{background:#fff;border-radius:var(--r-xl);padding:28px 24px;
+  box-shadow:0 4px 0 rgba(0,0,0,.06),0 12px 32px rgba(0,0,0,.08);
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);border:2px solid transparent;
+  position:relative;overflow:hidden;}
+.feature-card:hover{transform:translateY(-8px);border-color:var(--fc,#FFD700);
+  box-shadow:0 8px 0 rgba(0,0,0,.06),0 20px 48px rgba(0,0,0,.12);}
+.feature-card.fc1{--fc:#FFD700;} .feature-card.fc2{--fc:#FF3D8E;}
+.feature-card.fc3{--fc:#00D4FF;} .feature-card.fc4{--fc:#00E676;}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--fc,#FFD700),transparent);}
+.feat-icon-wrap{width:72px;height:72px;border-radius:22px;
+  background:var(--fi-bg,rgba(255,215,0,.12));
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;margin-bottom:18px;
+  box-shadow:0 6px 20px var(--fi-shadow,rgba(255,215,0,.2));}
+.fc1 .feat-icon-wrap{--fi-bg:rgba(255,215,0,.12);--fi-shadow:rgba(255,215,0,.2);}
+.fc2 .feat-icon-wrap{--fi-bg:rgba(255,61,142,.12);--fi-shadow:rgba(255,61,142,.2);}
+.fc3 .feat-icon-wrap{--fi-bg:rgba(0,212,255,.12);--fi-shadow:rgba(0,212,255,.2);}
+.fc4 .feat-icon-wrap{--fi-bg:rgba(0,230,118,.12);--fi-shadow:rgba(0,230,118,.2);}
+.feat-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:20px;font-weight:800;color:var(--text-dark);margin-bottom:8px;}
+.feat-desc{font-size:14px;color:#6b7280;line-height:1.7;}
+.feat-arrow{display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+  font-family:'Baloo Bhaijaan 2',cursive;font-size:14px;font-weight:700;color:var(--fc,#FFD700);}
+
+/* ── HOW IT WORKS ── */
+.how-section{position:relative;z-index:3;padding:70px 28px;overflow:hidden;}
+.steps-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:900px;margin:0 auto;}
+.step-card{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:var(--r-xl);padding:28px 20px;text-align:center;
+  transition:all .3s;position:relative;}
+.step-card:hover{background:rgba(255,255,255,.12);transform:translateY(-6px);}
+.step-num{width:50px;height:50px;border-radius:50%;
+  background:var(--sn-bg,var(--yellow));color:var(--sn-c,#1a1a2e);
+  font-family:'Baloo Bhaijaan 2',cursive;font-size:22px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+  box-shadow:0 4px 0 rgba(0,0,0,.2);}
+.s1 .step-num{--sn-bg:var(--yellow);--sn-c:#1a1a2e;}
+.s2 .step-num{--sn-bg:var(--pink);--sn-c:white;}
+.s3 .step-num{--sn-bg:var(--cyan);--sn-c:#0a0a2e;}
+.s4 .step-num{--sn-bg:var(--green);--sn-c:#001a0e;}
+.step-icon{font-size:48px;margin-bottom:12px;display:block;animation:step-bounce 3s ease-in-out infinite var(--sb,0s);}
+@keyframes step-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.s2 .step-icon{--sb:-.5s} .s3 .step-icon{--sb:-1s} .s4 .step-icon{--sb:-1.5s}
+.step-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:17px;font-weight:800;margin-bottom:8px;}
+.step-desc{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;}
+
+/* ── TESTIMONIALS ── */
+.testi-section{position:relative;z-index:3;background:rgba(255,255,255,.04);padding:70px 28px;}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto;}
+@media(max-width:760px){.testi-grid{grid-template-columns:1fr;}}
+.testi-card{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:var(--r-xl);padding:24px 22px;transition:all .3s;position:relative;}
+.testi-card:hover{background:rgba(255,255,255,.13);transform:translateY(-5px);}
+.testi-stars{color:var(--yellow);font-size:18px;margin-bottom:14px;letter-spacing:2px;}
+.testi-text{font-size:15px;line-height:1.8;color:rgba(255,255,255,.8);margin-bottom:18px;}
+.testi-author{display:flex;align-items:center;gap:12px;}
+.testi-avatar{width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.ta-bg1{background:linear-gradient(135deg,#FFD700,#FF7A00);}
+.ta-bg2{background:linear-gradient(135deg,#FF3D8E,#6b21c8);}
+.ta-bg3{background:linear-gradient(135deg,#00D4FF,#00E676);}
+.testi-name{font-family:'Baloo Bhaijaan 2',cursive;font-size:15px;font-weight:800;}
+.testi-role{font-size:12px;color:rgba(255,255,255,.5);}
+
+/* ── CTA SECTION ── */
+.cta-section{position:relative;z-index:3;padding:80px 28px;text-align:center;overflow:hidden;}
+.cta-card{max-width:680px;margin:0 auto;
+  background:linear-gradient(135deg,rgba(107,33,200,.6),rgba(45,0,106,.8));
+  border:1.5px solid rgba(255,255,255,.15);border-radius:var(--r-xl);
+  padding:56px 40px;position:relative;overflow:hidden;
+  box-shadow:0 0 80px rgba(107,33,200,.4);}
+.cta-card::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,.1) 0%,transparent 60%);}
+.cta-emoji{font-size:72px;display:block;margin-bottom:16px;
+  animation:astro-float 4s ease-in-out infinite;}
+.cta-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:clamp(26px,4vw,40px);
+  font-weight:900;margin-bottom:12px;position:relative;}
+.cta-sub{font-size:16px;color:rgba(255,255,255,.7);margin-bottom:32px;line-height:1.7;}
+.cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+.btn-orange{background:var(--orange);color:#fff;box-shadow:0 7px 0 #b85a00;}
+.btn-orange:hover{box-shadow:0 10px 0 #b85a00;}
+/* Floating emoji in CTA */
+.cta-deco{position:absolute;font-size:var(--cs,30px);animation:item-float var(--cf,5s) ease-in-out infinite var(--cfd,0s);opacity:.4;}
+
+/* ── DEVELOPERS SECTION ── */
+.devs-section{position:relative;z-index:3;padding:50px 28px;text-align:center;}
+.devs-btn{
+  background:linear-gradient(135deg,#6b21c8,#a855f7);
+  border:none;
+  border-radius:14px;
+  padding:14px 36px;
+  color:#fff;
+  font-family:'Baloo Bhaijaan 2',cursive;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+  transition:all .25s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  box-shadow:0 4px 0 #4a1090, 0 8px 24px rgba(107,33,200,.4);
+  letter-spacing:.3px;
+}
+.devs-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 7px 0 #4a1090, 0 14px 32px rgba(107,33,200,.5);
+  background:linear-gradient(135deg,#7c3aed,#c084fc);
+}
+.devs-btn:active{transform:translateY(0);box-shadow:0 2px 0 #4a1090;}
+.devs-btn .btn-star{
+  font-size:18px;
+  display:inline-block;
+  color:#FFD700;
+  filter:drop-shadow(0 0 4px rgba(255,215,0,.7));
+}
+
+/* ── DEVELOPER CARDS (Modal) ── */
+.devs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.dev-card{
+  background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(107,33,200,.12));
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;
+  padding:22px 16px;
+  text-align:center;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  cursor:default;
+  position:relative;
+  overflow:hidden;
+}
+.dev-card::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--yellow),var(--orange),var(--pink));
+  opacity:0;
+  transition:opacity .3s;
+  border-radius:20px 20px 0 0;
+}
+.dev-card:hover{
+  background:linear-gradient(145deg,rgba(255,215,0,.1),rgba(107,33,200,.2));
+  border-color:rgba(255,215,0,.35);
+  transform:translateY(-5px);
+  box-shadow:0 12px 36px rgba(255,215,0,.15);
+}
+.dev-card:hover::before{opacity:1;}
+.dev-avatar{
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,var(--yellow),var(--orange));
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:900;
+  color:#1a1a2e;margin:0 auto 12px;
+  transition:transform .3s;
+  box-shadow:0 4px 16px rgba(255,215,0,.3);
+}
+.dev-card:hover .dev-avatar{transform:scale(1.12) rotate(-6deg);}
+.dev-name{font-family:'Baloo Bhaijaan 2',cursive;font-size:15px;font-weight:900;letter-spacing:.2px;}
+.dev-role{font-size:11px;color:rgba(255,255,255,.45);margin-top:4px;font-weight:600;}
+
+/* نجمة واحدة تظهر عند التمرير */
+.dev-hover-star{
+  position:absolute;
+  top:10px;left:50%;
+  transform:translateX(-50%) translateY(-8px) scale(0);
+  font-size:20px;
+  opacity:0;
+  pointer-events:none;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);
+  filter:drop-shadow(0 0 6px rgba(255,215,0,.9));
+}
+.dev-card:hover .dev-hover-star{
+  opacity:1;
+  transform:translateX(-50%) translateY(0) scale(1);
+}
+footer{position:relative;z-index:3;background:rgba(0,0,0,.3);
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:24px 28px;text-align:center;}
+.footer-logo{font-family:'Baloo Bhaijaan 2',cursive;font-size:22px;font-weight:900;margin-bottom:8px;}
+footer p{font-size:13px;color:rgba(255,255,255,.45);}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-box{background:linear-gradient(160deg,#1a0040,#2d006a);
+  border:1.5px solid rgba(255,255,255,.15);border-radius:var(--r-xl);
+  width:100%;max-width:560px;max-height:85vh;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+  animation:modal-pop .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes modal-pop{from{transform:scale(.85) translateY(30px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.modal-head{padding:24px 24px 16px;border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:20px;font-weight:800;}
+.modal-close{background:rgba(255,255,255,.1);border:none;border-radius:10px;
+  width:36px;height:36px;color:#fff;cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-close:hover{background:rgba(255,71,87,.3);}
+.modal-body{padding:20px 24px;overflow-y:auto;max-height:60vh;}
+.modal-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.08);
+  text-align:center;font-size:13px;color:rgba(255,255,255,.5);}
+</style>
+</head>
+<body>
+<div class="space-bg"></div>
+<canvas id="starsCanvas"></canvas>
+
+<!-- Planets -->
+<div class="planet p-saturn"></div>
+<div class="planet p-blue"></div>
+<div class="planet p-pink"></div>
+<div class="planet p-tiny"></div>
+<div class="shooting sh1"></div>
+<div class="shooting sh2"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="home.html" class="nav-logo">
+    <span class="logo-icon">⭐</span>
+    <span class="logo-text">نجوم التعلم</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">المميزات</a>
+    <a href="#how" class="nav-link">كيف تعمل؟</a>
+    <a href="#testimonials" class="nav-link">آراء الأهل</a>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="nav-cta" onclick="location.href='login.html'">🚀 ابدأ الآن</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-section">
+  <div class="hero-content">
+    <div class="hero-badge">🌟 منصة تعليمية تفاعلية للأطفال</div>
+    <h1 class="hero-title">
+      اجعل تعلّم طفلك
+      <span class="hl-yellow">مغامرةً فضائية</span>
+      <span class="hl-orange">لا تنتهي!</span>
+    </h1>
+    <p class="hero-desc">منصة مصممة بحبٍّ للأطفال من ٣ إلى ٨ سنوات — حروف، أرقام، قصص، وألعاب ذكية في بيئة آمنة يراقبها الأهل</p>
+    <div class="hero-btns">
+      <a href="login.html" class="btn btn-yellow">🚀 ابدأ الرحلة مجاناً</a>
+      <a href="#how"       class="btn btn-ghost">▶ كيف تعمل؟</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><span class="stat-num">+٥٠٠</span><span class="stat-lbl">درس تفاعلي</span></div>
+      <div class="stat-item"><span class="stat-num">+٢٨</span><span class="stat-lbl">حرفاً عربياً</span></div>
+      <div class="stat-item"><span class="stat-num">٣-٨</span><span class="stat-lbl">سنوات</span></div>
+    </div>
+  </div>
+
+  <div class="hero-character-wrap">
+    <div class="char-glow"></div>
+    <div class="orbit-ring or-1"><div class="orbit-dot od-yellow"></div></div>
+    <div class="orbit-ring or-2"><div class="orbit-dot od-pink"></div></div>
+    <span class="astronaut">🧑‍🚀</span>
+    <!-- Floating items around character -->
+    <div class="float-item" style="top:5%;right:10%;--if:4s;font-size:32px;">⭐</div>
+    <div class="float-item" style="top:20%;left:5%;--if:5s;--id:-.8s;font-size:24px;">🌙</div>
+    <div class="float-item" style="bottom:15%;right:8%;--if:6s;--id:-1.5s;font-size:28px;">🪐</div>
+    <div class="float-item" style="bottom:20%;left:12%;--if:3.5s;--id:-.4s;font-size:22px;">✨</div>
+    <div class="float-item" style="top:45%;right:2%;--if:4.5s;--id:-2s;font-size:20px;">💫</div>
+  </div>
+</section>
+
+<!-- WAVE -->
+<div class="wave-divider"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#ffffff"/></svg></div>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-center">
+    <div class="section-tag">✨ لماذا نجوم التعلم؟</div>
+    <h2 class="section-title">كل ما يحتاجه طفلك<br>في مكان واحد 🎯</h2>
+    <p class="section-sub">صممنا كل تفصيلة بعناية لتناسب طفلك وتمنحك أنت الراحة والاطمئنان</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card fc1">
+      <div class="feat-icon-wrap">🔤</div>
+      <h3 class="feat-title">الحروف العربية والإنجليزية</h3>
+      <p class="feat-desc">٢٨ حرفاً عربياً + ٢٦ حرفاً إنجليزياً بنطق صحيح، رسوم متحركة، وأمثلة مصورة تبقى في ذاكرة طفلك</p>
+      <span class="feat-arrow">تعلم أكثر ←</span>
+    </div>
+    <div class="feature-card fc2">
+      <div class="feat-icon-wrap">🧠</div>
+      <h3 class="feat-title">اختبارات ذكية تكيّفية</h3>
+      <p class="feat-desc">أسئلة تفاعلية تتكيّف مع مستوى الطفل تلقائياً، مع نجوم ومكافآت تحفيزية بعد كل إنجاز</p>
+      <span class="feat-arrow">اكتشف أكثر ←</span>
+    </div>
+    <div class="feature-card fc3">
+      <div class="feat-icon-wrap">👨‍👩‍👧</div>
+      <h3 class="feat-title">لوحة تحكم للأهل</h3>
+      <p class="feat-desc">تابع تقدم طفلك لحظة بلحظة — إحصائيات مفصلة، وقت الاستخدام، النجوم المكتسبة، والمواضيع المُكتملة</p>
+      <span class="feat-arrow">اعرف أكثر ←</span>
+    </div>
+    <div class="feature-card fc4">
+      <div class="feat-icon-wrap">🏆</div>
+      <h3 class="feat-title">سماء الإنجازات الكونية</h3>
+      <p class="feat-desc">كل نجمة يكسبها طفلك تضيء سماءه الخاصة! وعند إكمال موضوع كامل يحصل على كوكب جديد في مجرته</p>
+      <span class="feat-arrow">شاهد المزيد ←</span>
+    </div>
+  </div>
+</section>
+
+<!-- WAVE BACK -->
+<div style="background:#fff;"><svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="display:block"><path d="M0,40 C360,0 1080,80 1440,40 L1440,0 L0,0 Z" fill="#1a0040"/></svg></div>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-center">
+    <div class="section-tag" style="background:linear-gradient(135deg,#FF3D8E,#FF7A00);">🚀 كيف تعمل؟</div>
+    <h2 class="section-title" style="color:#fff;">أربع خطوات سهلة<br>وطفلك يطير نحو النجوم! ✨</h2>
+  </div>
+  <div class="steps-grid" id="how">
+    <div class="step-card s1">
+      <div class="step-num">١</div>
+      <span class="step-icon">👨‍👩‍👧</span>
+      <h3 class="step-title">سجّل كوليّ أمر</h3>
+      <p class="step-desc">أنشئ حساب الأهل بالبريد وكلمة المرور في أقل من دقيقة</p>
+    </div>
+    <div class="step-card s2">
+      <div class="step-num">٢</div>
+      <span class="step-icon">👶</span>
+      <h3 class="step-title">أضف بيانات طفلك</h3>
+      <p class="step-desc">اختر اسماً وأفاتاراً ورمزاً سرياً بسيطاً لطفلك</p>
+    </div>
+    <div class="step-card s3">
+      <div class="step-num">٣</div>
+      <span class="step-icon">🎮</span>
+      <h3 class="step-title">يتعلم طفلك باستمتاع</h3>
+      <p class="step-desc">أنشطة تفاعلية، قصص، اختبارات، ورسم — كل شيء في متناول يده</p>
+    </div>
+    <div class="step-card s4">
+      <div class="step-num">٤</div>
+      <span class="step-icon">📊</span>
+      <h3 class="step-title">تابع تقدمه معك</h3>
+      <p class="step-desc">راقب نجومه، إنجازاته، والوقت الذي قضاه في كل نشاط</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi-section" id="testimonials">
+  <div class="section-center">
+    <div class="section-tag" style="background:linear-gradient(135deg,#00D4FF,#00E676);color:#0a0a2e;">💬 آراء الأهل</div>
+    <h2 class="section-title" style="color:#fff;">أهالٍ رأوا الفرق بأم أعينهم 👀</h2>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+      <p class="testi-text">«ابني تعلم كل الحروف العربية في أسبوعين فقط! التصميم رائع والأصوات واضحة. أنصح كل أم بتجربة المنصة»</p>
+      <div class="testi-author"><div class="testi-avatar ta-bg1">🌸</div><div><div class="testi-name">أم أحمد</div><div class="testi-role">أم لطفلٍ عمره ٥ سنوات</div></div></div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+      <p class="testi-text">«ميزة لوحة الأهل أعجبتني جداً! أرى بالضبط ما تعلمته ابنتي كل يوم وكم نجمة حصلت عليها. ممتازة!»</p>
+      <div class="testi-author"><div class="testi-avatar ta-bg2">🚀</div><div><div class="testi-name">أبو لينا</div><div class="testi-role">أب لطفلتين</div></div></div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">⭐⭐⭐⭐⭐</div>
+      <p class="testi-text">«الألوان والرسومات جميلة جداً وطفلي يحب فكرة الكواكب والنجوم في سمائه الخاصة. مشجعة جداً!»</p>
+      <div class="testi-author"><div class="testi-avatar ta-bg3">🌙</div><div><div class="testi-name">أم مريم</div><div class="testi-role">أم لثلاثة أطفال</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DEVELOPERS -->
+<section class="devs-section">
+  <button class="devs-btn" onclick="openDevs()">
+    <span class="btn-star">★</span> أسماء مطورات مشروع التخرج ٢٠٢٦
+  </button>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo"><span style="color:#FFD700;">⭐</span> <span style="background:linear-gradient(135deg,#FFD700,#FF7A00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">نجوم التعلم</span></div>
+  <p>جميع الحقوق محفوظة © ٢٠٢٦ — المعهد التقاني الإحصائي</p>
+</footer>
+
+<!-- DEVELOPERS MODAL -->
+<div class="modal-overlay" id="devsModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">🎓 فريق التطوير</span>
+      <button class="modal-close" onclick="closeDevs()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="text-align:center;font-size:13px;color:rgba(255,255,255,.5);margin-bottom:16px;">المعهد التقاني الإحصائي — دفعة ٢٠٢٦</p>
+      <div class="devs-grid" id="devsGrid"></div>
+    </div>
+    <div class="modal-footer">صُنع بكل حب ❤️ لتعليم أطفالنا</div>
+  </div>
+</div>
+
+<script>
+// Stars canvas
+(function(){
+  const c=document.getElementById('starsCanvas');
+  const ctx=c.getContext('2d');
+  let W,H,stars=[];
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<180;i++) stars.push({x:Math.random()*9999,y:Math.random()*9999,r:Math.random()*1.8+.3,a:Math.random(),da:(Math.random()*.007+.002)*(Math.random()<.5?1:-1)});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{
+      s.a+=s.da;if(s.a<=0||s.a>=1)s.da*=-1;
+      ctx.globalAlpha=Math.max(0,Math.min(1,s.a));
+      ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);ctx.fill();
+    });
+    ctx.globalAlpha=1;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// Developers
+const DEVS = [
+  { name: 'نور حسكي',           role: 'API Developer' },
+  { name: 'هبه عميري',          role: 'Frontend Developer' },
+  { name: 'ناديا النويلاتي',    role: 'Database Manager' },
+  { name: 'لانه شقدوح',         role: 'System Analyst' },
+  { name: 'ليلاس شومان',        role: 'Statistics Analyst' },
+  { name: 'اية محفوظ',          role: 'UI/UX Designer' },
+  { name: 'اية خدّام الجامع',   role: 'Full Stack Developer' },
+];
+const EMOJIS = ['🌟','🚀','🎨','💡','🌸','✨','🏆'];
+
+function openDevs() {
+  const g = document.getElementById('devsGrid');
+  g.innerHTML = '';
+  DEVS.forEach((d, i) => {
+    const card = document.createElement('div');
+    card.className = 'dev-card';
+    card.innerHTML = `
+      <span class="dev-hover-star">⭐</span>
+      <div class="dev-avatar">${EMOJIS[i]}</div>
+      <div class="dev-name">${d.name}</div>
+      <div class="dev-role">${d.role}</div>
+    `;
+    g.appendChild(card);
+  });
+  document.getElementById('devsModal').classList.add('open');
+}
+
+function closeDevs() { document.getElementById('devsModal').classList.remove('open'); }
+document.getElementById('devsModal').addEventListener('click', function(e) { if (e.target === this) closeDevs(); });
+</script>
+<script src="api.js"></script>
+</body>
+</html>

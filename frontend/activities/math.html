@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأرقام والحساب - نجوم التعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="activity-shared.css">
+    <style>
+        :root {
+            --hero-start: #FF8C00;
+            --hero-end: #FFA502;
+        }
+
+        /* === شبكة الأرقام === */
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .number-card {
+            background: linear-gradient(135deg, #fff9f0, #fff3dc);
+            border: 3px solid #FFD580;
+            border-radius: 18px;
+            padding: 18px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .number-card:hover, .number-card.active {
+            transform: translateY(-6px) scale(1.05);
+            border-color: var(--accent-orange);
+            box-shadow: 0 10px 25px rgba(255,165,2,0.3);
+        }
+
+        .number-card.active { background: linear-gradient(135deg, #FFA502, #FFD700); }
+        .number-card.active .number-digit,
+        .number-card.active .number-name { color: var(--white); }
+
+        .number-digit {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #FF8C00;
+            font-family: 'Fredoka', sans-serif;
+            display: block;
+        }
+
+        .number-name {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 600;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .number-dots {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 3px;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+
+        .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #FF8C00;
+        }
+
+        .number-card.active .dot { background: var(--white); }
+
+        /* === عداد تفاعلي === */
+        .counter-section {
+            background: linear-gradient(135deg, #fff3dc, #ffe9b8);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            border: 3px solid #FFD580;
+            margin-bottom: 25px;
+        }
+
+        .counter-display {
+            font-size: 5rem;
+            font-weight: 800;
+            color: #FF8C00;
+            font-family: 'Fredoka', sans-serif;
+            margin: 10px 0;
+            text-shadow: 3px 3px 0 rgba(255,140,0,0.2);
+        }
+
+        .counter-emojis {
+            font-size: 1.8rem;
+            min-height: 50px;
+            line-height: 1.6;
+            letter-spacing: 3px;
+            word-break: break-all;
+        }
+
+        .counter-btns {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .counter-btn {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .btn-minus { background: #FF7675; color: var(--white); }
+        .btn-plus  { background: #00B894; color: var(--white); }
+        .btn-reset { background: #636E72; color: var(--white); font-size: 1.2rem; }
+
+        .counter-btn:hover { transform: scale(1.15); }
+
+        /* === لعبة الجمع والطرح === */
+        .quiz-section {
+            text-align: center;
+        }
+
+        .quiz-title {
+            font-size: 1.4rem; font-weight: 700;
+            color: var(--text-dark); margin-bottom: 20px;
+        }
+
+        .equation-display {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            padding: 25px 20px;
+            color: var(--white);
+            font-size: 2.8rem;
+            font-weight: 800;
+            font-family: 'Fredoka', sans-serif;
+            margin-bottom: 25px;
+            letter-spacing: 4px;
+        }
+
+        .equation-display .question-mark {
+            background: rgba(255,255,255,0.2);
+            padding: 0 15px;
+            border-radius: 10px;
+            border: 3px dashed rgba(255,255,255,0.6);
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+
+        .answer-btn {
+            padding: 18px;
+            border-radius: 16px;
+            border: 3px solid #ddd;
+            background: var(--white);
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'Fredoka', sans-serif;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .answer-btn:hover { border-color: var(--primary-color); transform: translateY(-3px); }
+        .answer-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
+        .answer-btn.wrong   { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+
+        .quiz-score {
+            font-size: 1.1rem; font-weight: 700;
+            color: var(--text-dark); margin-top: 10px;
+        }
+
+        .quiz-score span { color: #FF8C00; font-size: 1.4rem; }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="container header-content">
+        <a href="../dashboard.html" class="logo">
+            <i class="fas fa-rocket"></i>
+            <span>عالم التعلم</span>
+        </a>
+        <a href="../dashboard.html" class="back-btn">
+            <i class="fas fa-arrow-right"></i>
+            <span>العودة</span>
+        </a>
+    </div>
+</header>
+
+<div class="page-hero">
+    <span class="hero-icon">🔢</span>
+    <h1>الأرقام والحساب</h1>
+    <p>تعلّم الأرقام والجمع والطرح بطريقة ممتعة!</p>
+</div>
+
+<main class="container">
+
+    <!-- شريط النجوم -->
+    <div class="stars-bar">
+        <i class="fas fa-star"></i>
+        <span>نجومي: <strong id="starsCount">0</strong> ⭐</span>
+    </div>
+
+    <!-- الأرقام من 1 إلى 10 -->
+    <section class="activity-section">
+        <h2 style="margin-bottom:20px; font-size:1.4rem;">
+            <i class="fas fa-hashtag" style="color:#FF8C00;"></i> الأرقام من ١ إلى ١٠
+        </h2>
+        <div class="numbers-grid" id="numbersGrid"></div>
+    </section>
+
+    <!-- عداد تفاعلي -->
+    <section class="activity-section">
+        <h2 style="margin-bottom:15px; font-size:1.4rem;">
+            <i class="fas fa-plus-minus" style="color:#FF8C00;"></i> العداد التفاعلي
+        </h2>
+        <div class="counter-section">
+            <p style="color:var(--text-light); margin-bottom:5px;">اضغط + أو - لتعلم العدّ!</p>
+            <div class="counter-display" id="counterDisplay">0</div>
+            <div class="counter-emojis" id="counterEmojis">🌟</div>
+            <div class="counter-btns">
+                <button class="counter-btn btn-minus" onclick="changeCounter(-1)">−</button>
+                <button class="counter-btn btn-reset" onclick="resetCounter()"><i class="fas fa-redo"></i></button>
+                <button class="counter-btn btn-plus"  onclick="changeCounter(1)">+</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- لعبة الجمع والطرح -->
+    <section class="activity-section">
+        <div class="quiz-section">
+            <div class="quiz-title">
+                <i class="fas fa-gamepad" style="color:#FF8C00;"></i>
+                العب واحسب! 🎮
+            </div>
+            <div class="equation-display" id="equationDisplay">
+                <span id="num1">3</span>
+                <span id="opSign"> + </span>
+                <span id="num2">4</span>
+                <span> = </span>
+                <span class="question-mark">?</span>
+            </div>
+            <div class="answer-options" id="answerOptions"></div>
+            <div class="quiz-score">
+                الإجابات الصحيحة: <span id="quizScore">0</span> 🎯
+            </div>
+            <button class="btn-primary" style="margin-top:15px;" onclick="generateQuestion()">
+                <i class="fas fa-sync"></i> سؤال جديد
+            </button>
+        </div>
+    </section>
+
+</main>
+
+<footer class="page-footer">
+    <p>صنع بحب ❤️ لتعليم أطفالنا</p>
+</footer>
+
+<script src="../api.js"></script>
+<script>
+    // === بيانات الأرقام ===
+    const numbers = [
+        { digit: 1, name: 'واحد',  emoji: '⭐' },
+        { digit: 2, name: 'اثنان', emoji: '🌙' },
+        { digit: 3, name: 'ثلاثة', emoji: '🍎' },
+        { digit: 4, name: 'أربعة', emoji: '🌸' },
+        { digit: 5, name: 'خمسة', emoji: '🦋' },
+        { digit: 6, name: 'ستة',  emoji: '🐝' },
+        { digit: 7, name: 'سبعة', emoji: '🌈' },
+        { digit: 8, name: 'ثمانية',emoji: '🎈' },
+        { digit: 9, name: 'تسعة', emoji: '🌺' },
+        { digit: 10, name: 'عشرة', emoji: '🏆' },
+    ];
+
+    // === رسم بطاقات الأرقام ===
+    function renderNumbers() {
+        const grid = document.getElementById('numbersGrid');
+        grid.innerHTML = '';
+        numbers.forEach(n => {
+            const card = document.createElement('div');
+            card.className = 'number-card';
+            card.id = `num-card-${n.digit}`;
+            const dots = Array(n.digit).fill('<div class="dot"></div>').join('');
+            card.innerHTML = `
+                <span class="number-digit">${n.digit}</span>
+                <span class="number-name">${n.name}</span>
+                <div class="number-dots">${dots}</div>
+            `;
+            card.onclick = () => selectNumber(n);
+            grid.appendChild(card);
+        });
+    }
+
+    function selectNumber(n) {
+        document.querySelectorAll('.number-card').forEach(c => c.classList.remove('active'));
+        document.getElementById(`num-card-${n.digit}`)?.classList.add('active');
+        speak(n.name);
+        showToast(`${n.emoji} ${n.digit} - ${n.name}`);
+        addStar(1);
+    }
+
+    // === العداد ===
+    let counterValue = 0;
+    const counterEmojis = ['🌟','🍎','🐝','🦋','🌈','🎈','🌺','⭐','🌙','🏆'];
+
+    function changeCounter(delta) {
+        counterValue = Math.max(0, Math.min(10, counterValue + delta));
+        document.getElementById('counterDisplay').textContent = counterValue;
+        const emojisHtml = counterEmojis.slice(0, counterValue).join(' ');
+        document.getElementById('counterEmojis').textContent = counterValue === 0 ? '...' : emojisHtml;
+        speak(numbers[counterValue - 1]?.name || 'صفر');
+    }
+
+    function resetCounter() {
+        counterValue = 0;
+        document.getElementById('counterDisplay').textContent = 0;
+        document.getElementById('counterEmojis').textContent = '...';
+    }
+
+    // === لعبة الجمع والطرح ===
+    let correctAnswer = 0;
+    let quizScore = 0;
+    let canAnswer = true;
+
+    function generateQuestion() {
+        canAnswer = true;
+        const isAdd = Math.random() > 0.4;
+        let a, b;
+        if (isAdd) {
+            a = Math.floor(Math.random() * 6) + 1;
+            b = Math.floor(Math.random() * (10 - a)) + 1;
+            correctAnswer = a + b;
+        } else {
+            a = Math.floor(Math.random() * 8) + 2;
+            b = Math.floor(Math.random() * a) + 1;
+            correctAnswer = a - b;
+        }
+        document.getElementById('num1').textContent = a;
+        document.getElementById('opSign').textContent = isAdd ? ' + ' : ' − ';
+        document.getElementById('num2').textContent = b;
+
+        // خيارات الإجابة
+        const wrongAnswers = new Set();
+        while (wrongAnswers.size < 3) {
+            const w = correctAnswer + (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 4) + 1);
+            if (w !== correctAnswer && w >= 0 && w <= 20) wrongAnswers.add(w);
+        }
+        const options = [...wrongAnswers, correctAnswer].sort(() => Math.random() - 0.5);
+        const container = document.getElementById('answerOptions');
+        container.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'answer-btn';
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(opt, btn);
+            container.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selected, btn) {
+        if (!canAnswer) return;
+        canAnswer = false;
+        if (selected === correctAnswer) {
+            btn.classList.add('correct');
+            quizScore++;
+            document.getElementById('quizScore').textContent = quizScore;
+            showToast('🎉 إجابة صحيحة! +2 نجوم');
+            addStar(2);
+            createConfetti();
+        } else {
+            btn.classList.add('wrong');
+            // إظهار الصحيحة
+            document.querySelectorAll('.answer-btn').forEach(b => {
+                if (parseInt(b.textContent) === correctAnswer) b.classList.add('correct');
+            });
+            showToast('❌ حاول مرة أخرى! الإجابة: ' + correctAnswer);
+        }
+        setTimeout(generateQuestion, 2000);
+    }
+
+    // === مساعدات ===
+    function speak(text) {
+        window.speechSynthesis?.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ar-SA'; u.rate = 0.8;
+        speechSynthesis.speak(u);
+    }
+
+    let totalStars = 0; // ✅ سيتم تحميله من الـ API
+
+    async function loadStarsFromAPI() {
+        const childId = localStorage.getItem('childId');
+        if (!childId) return;
+        try {
+            const childToken = localStorage.getItem('childToken');
+            const token = childToken || localStorage.getItem('token');
+            if (!token) return;
+            const API_BASE = '/api';
+            const resp = await fetch(`${API_BASE}/children/${childId}/progress`, {
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+            });
+            const data = await resp.json();
+            if (data.success && data.data) {
+                totalStars = data.data.math_stars || 0;
+                document.getElementById('starsCount').textContent = totalStars;
+                // تحديث localStorage كنسخة احتياطية
+                localStorage.setItem('mathStars', totalStars);
+                console.log('✅ Math stars loaded from API:', totalStars);
+            }
+        } catch(e) {
+            // Fallback للـ localStorage
+            totalStars = parseInt(localStorage.getItem('mathStars') || '0');
+            document.getElementById('starsCount').textContent = totalStars;
+        }
+    }
+    function syncStarsToAccount(n) {
+        try {
+            const session = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+            if (!session || session.type !== 'child') return;
+            const accounts = JSON.parse(localStorage.getItem('kidsAppAccounts') || 'null');
+            if (!accounts) return;
+            const idx = accounts.children.findIndex(c => String(c.id) === String(session.id));
+            if (idx === -1) return;
+            accounts.children[idx].stars = (accounts.children[idx].stars || 0) + n;
+            localStorage.setItem('kidsAppAccounts', JSON.stringify(accounts));
+        } catch(e) {}
+    }
+    function addStar(n) {
+        totalStars += n;
+        document.getElementById('starsCount').textContent = totalStars;
+        localStorage.setItem('mathStars', totalStars);
+        syncStarsToAccount(n);
+        /* مزامنة مع API */
+        if (typeof syncActivityToAPI === 'function') {
+            syncActivityToAPI('math', n, totalStars, 1, { type: 'math_stars' });
+        }
+    }
+
+    function showToast(msg) {
+        document.querySelector('.toast')?.remove();
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 3100);
+    }
+
+    function createConfetti() {
+        for (let i = 0; i < 25; i++) {
+            setTimeout(() => {
+                const c = document.createElement('div');
+                c.className = 'confetti-piece';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.top = '-10px';
+                c.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                c.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 4000);
+            }, i * 80);
+        }
+    }
+
+    // === تحميل ===
+    document.addEventListener('DOMContentLoaded', () => {
+        // تحميل النجوم من حساب الطفل الحالي
+        try {
+            const session = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+            if (!session || session.type !== 'child') { location.href = '../login.html'; return; }
+            const accounts = JSON.parse(localStorage.getItem('kidsAppAccounts') || 'null');
+            if (accounts) {
+                const child = accounts.children.find(c => c.id === session.id);
+                if (child) totalStars = child.stars || 0;
+            }
+        } catch(e) {}
+        renderNumbers();
+        generateQuestion();
+        document.getElementById('starsCount').textContent = totalStars;
+        // ✅ تحميل النجوم الحقيقية من الـ API
+        loadStarsFromAPI();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.certificate-container {
+    width: 100%;
+    max-width: 900px;
+}
+
+.certificate {
+    background: white;
+    padding: 60px;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.decorative-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+}
+
+.shape-1 {
+    width: 200px;
+    height: 200px;
+    background: #667eea;
+    top: -50px;
+    left: -50px;
+    opacity: 0.3;
+}
+
+.shape-2 {
+    width: 150px;
+    height: 150px;
+    background: #f093fb;
+    bottom: 50px;
+    right: -30px;
+    opacity: 0.4;
+}
+
+.shape-3 {
+    width: 100px;
+    height: 100px;
+    background: #4facfe;
+    top: 50%;
+    right: 100px;
+    opacity: 0.3;
+}
+
+.planet {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    top: 100px;
+    right: 80px;
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0.2);
+}
+
+.planet::before {
+    content: '';
+    position: absolute;
+    width: 120px;
+    height: 30px;
+    border: 3px solid #f093fb;
+    border-radius: 50%;
+    top: 25px;
+    left: -20px;
+    transform: rotate(-30deg);
+}
+
+.rainbow {
+    position: absolute;
+    width: 150px;
+    height: 75px;
+    border-radius: 50%;
+    top: 200px;
+    left: 50px;
+    background: linear-gradient(180deg, 
+        #ff6b6b 0%, 
+        #feca57 20%, 
+        #48dbfb 40%, 
+        #1dd1a1 60%, 
+        transparent 100%);
+    opacity: 0.6;
+}
+
+.content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.school-name {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+.title {
+    font-size: 64px;
+    color: #ff6b6b;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.subtitle {
+    font-size: 28px;
+    color: #4facfe;
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+.presented-to {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+}
+
+.student-name {
+    font-size: 42px;
+    color: #ff6b6b;
+    margin: 30px 0;
+    font-weight: bold;
+    border-bottom: 3px solid #feca57;
+    display: inline-block;
+    padding: 0 40px 10px;
+}
+
+.description {
+    font-size: 16px;
+    color: #666;
+    max-width: 600px;
+    margin: 30px auto;
+    line-height: 1.6;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 60px;
+    padding: 0 50px;
+}
+
+.date, .signature {
+    text-align: center;
+}
+
+.date span, .signature span {
+    display: block;
+    border-top: 2px solid #666;
+    padding-top: 10px;
+    margin-top: 40px;
+    font-size: 14px;
+    color: #666;
+    min-width: 150px;
+}
+
+/* Stars decoration */
+.certificate::before {
+    content: '⭐';
+    position: absolute;
+    font-size: 24px;
+    top: 80px;
+    right: 200px;
+    opacity: 0.6;
+}
+
+.certificate::after {
+    content: '⭐';
+    position: absolute;
+    font-size: 20px;
+    bottom: 150px;
+    left: 100px;
+    opacity: 0.5;
+}
+
+/* Responsive */
+@media print {
+    body {
+        background: white;
+    }
+    
+    .certificate {
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+}
+
+@media (max-width: 768px) {
+    .certificate {
+        padding: 30px;
+    }
+    
+    .title {
+        font-size: 40px;
+    }
+    
+    .student-name {
+        font-size: 28px;
+    }
+    
+    .footer {
+        flex-direction: column;
+        gap: 30px;
+        padding: 0;
+    }
+}

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كلمات ومصطلحات - نجوم التعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="activity-shared.css">
+    <style>
+        :root { --hero-start: #FF6584; --hero-end: #FF9A9E; }
+
+        /* تبويبات الفئات */
+        .category-tabs {
+            display: flex; gap: 10px;
+            flex-wrap: wrap; justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .cat-tab {
+            padding: 10px 22px;
+            border-radius: 50px;
+            border: 2px solid #ddd;
+            background: var(--white);
+            font-family: 'Cairo', sans-serif;
+            font-size: 1rem; font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .cat-tab:hover { border-color: var(--accent-pink); }
+        .cat-tab.active {
+            background: var(--accent-pink);
+            border-color: var(--accent-pink);
+            color: var(--white);
+            box-shadow: 0 5px 15px rgba(255,118,117,0.4);
+        }
+
+        /* شبكة البطاقات */
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 18px;
+        }
+
+        .vocab-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 20px 12px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 3px solid transparent;
+            position: relative;
+        }
+
+        .vocab-card:hover {
+            transform: translateY(-7px) scale(1.03);
+            border-color: var(--accent-pink);
+            box-shadow: 0 15px 35px rgba(255,118,117,0.2);
+        }
+
+        .vocab-card.learned {
+            border-color: var(--accent-green);
+            background: linear-gradient(135deg, #f0fff8, #e8fff4);
+        }
+
+        .vocab-card.learned::after {
+            content: '✅';
+            position: absolute;
+            top: 6px; left: 6px;
+            font-size: 1rem;
+        }
+
+        .vocab-emoji {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .vocab-word {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .vocab-english {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-family: 'Fredoka', sans-serif;
+            margin-top: 3px;
+        }
+
+        /* بطاقة التفاصيل */
+        .detail-card {
+            display: none;
+            background: linear-gradient(135deg, #fff0f3, #ffe4e8);
+            border: 3px solid var(--accent-pink);
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+            animation: popIn 0.3s ease;
+        }
+
+        .detail-card.visible { display: block; }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .detail-emoji { font-size: 5rem; margin: 10px 0; display: block; }
+        .detail-word  { font-size: 2rem; font-weight: 800; color: var(--text-dark); }
+        .detail-eng   { font-size: 1.3rem; color: var(--accent-pink); font-family: 'Fredoka', sans-serif; }
+        .detail-desc  { color: var(--text-light); margin: 12px 0; font-size: 1rem; }
+
+        .detail-btns {
+            display: flex; gap: 12px;
+            justify-content: center; flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .listen-btn {
+            background: linear-gradient(135deg, var(--accent-pink), #ff9a9e);
+            color: var(--white); border: none;
+            padding: 11px 25px; border-radius: 50px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .listen-btn:hover { transform: translateY(-2px); }
+
+        .learned-btn {
+            background: linear-gradient(135deg, var(--accent-green), #38EF7D);
+            color: var(--white); border: none;
+            padding: 11px 25px; border-radius: 50px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .learned-btn:hover { transform: translateY(-2px); }
+
+        /* إحصاء */
+        .progress-info {
+            text-align: center;
+            font-size: 1rem; color: var(--text-light);
+            margin-bottom: 18px;
+        }
+        .progress-info strong { color: var(--accent-pink); font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="container header-content">
+        <a href="../dashboard.html" class="logo">
+            <i class="fas fa-rocket"></i><span>عالم التعلم</span>
+        </a>
+        <a href="../dashboard.html" class="back-btn">
+            <i class="fas fa-arrow-right"></i><span>العودة</span>
+        </a>
+    </div>
+</header>
+
+<div class="page-hero">
+    <span class="hero-icon">🍎</span>
+    <h1>كلمات ومصطلحات</h1>
+    <p>اكتشف الفواكه والحيوانات والألوان بطريقة ممتعة!</p>
+</div>
+
+<main class="container">
+
+    <div class="stars-bar">
+        <i class="fas fa-star"></i>
+        <span>تعلّمتُ: <strong id="learnedCount">0</strong> كلمة ⭐</span>
+    </div>
+
+    <!-- تفاصيل الكلمة المختارة -->
+    <div class="detail-card" id="detailCard">
+        <span class="detail-emoji" id="detailEmoji">🍎</span>
+        <div class="detail-word" id="detailWord">تفاحة</div>
+        <div class="detail-eng"  id="detailEng">Apple</div>
+        <div class="detail-desc" id="detailDesc">فاكهة حمراء لذيذة وصحية</div>
+        <div class="detail-btns">
+            <button class="listen-btn" id="listenAr" onclick="listenArabic()">
+                <i class="fas fa-volume-up"></i> استمع بالعربية
+            </button>
+            <button class="listen-btn" style="background:linear-gradient(135deg,#0984E3,#00CEC9)" onclick="listenEnglish()">
+                <i class="fas fa-volume-up"></i> Listen in English
+            </button>
+            <button class="learned-btn" id="learnedBtn" onclick="markLearned()">
+                <i class="fas fa-check"></i> حفظتُها!
+            </button>
+        </div>
+    </div>
+
+    <section class="activity-section">
+        <!-- تبويبات الفئات -->
+        <div class="category-tabs" id="categoryTabs"></div>
+
+        <div class="progress-info">
+            لقد تعلّمتِ <strong id="catLearnedCount">0</strong> من <strong id="catTotalCount">0</strong> كلمة 🎯
+        </div>
+
+        <!-- بطاقات المفردات -->
+        <div class="vocab-grid" id="vocabGrid"></div>
+    </section>
+</main>
+
+<footer class="page-footer"><p>صنع بحب ❤️ لتعليم أطفالنا</p></footer>
+
+<script src="../api.js"></script>
+<script>
+    const categories = {
+        fruits: {
+            label: '🍓 فواكه',
+            words: [
+                { ar: 'تفاحة',  en: 'Apple',      emoji: '🍎', desc: 'فاكهة حمراء لذيذة وصحية' },
+                { ar: 'موزة',   en: 'Banana',     emoji: '🍌', desc: 'فاكهة صفراء غنية بالطاقة' },
+                { ar: 'عنب',    en: 'Grapes',     emoji: '🍇', desc: 'حبات صغيرة حلوة وعصيرية' },
+                { ar: 'برتقال', en: 'Orange',     emoji: '🍊', desc: 'فاكهة برتقالية غنية بفيتامين C' },
+                { ar: 'فراولة', en: 'Strawberry', emoji: '🍓', desc: 'فاكهة حمراء قلبية الشكل' },
+                { ar: 'بطيخ',   en: 'Watermelon', emoji: '🍉', desc: 'فاكهة صيفية كبيرة وحلوة' },
+                { ar: 'أناناس', en: 'Pineapple',  emoji: '🍍', desc: 'فاكهة استوائية لها تاج' },
+                { ar: 'كرز',    en: 'Cherry',     emoji: '🍒', desc: 'فواكه صغيرة حمراء ثنائية' },
+            ]
+        },
+        animals: {
+            label: '🐾 حيوانات',
+            words: [
+                { ar: 'أسد',    en: 'Lion',     emoji: '🦁', desc: 'ملك الغابة بشعر كثيف' },
+                { ar: 'فيل',    en: 'Elephant', emoji: '🐘', desc: 'أكبر الحيوانات البرية' },
+                { ar: 'زرافة',  en: 'Giraffe',  emoji: '🦒', desc: 'أطول الحيوانات عنقاً' },
+                { ar: 'قطة',    en: 'Cat',      emoji: '🐱', desc: 'حيوان أليف محبوب' },
+                { ar: 'كلب',    en: 'Dog',      emoji: '🐶', desc: 'أوفى أصدقاء الإنسان' },
+                { ar: 'أرنب',   en: 'Rabbit',   emoji: '🐰', desc: 'حيوان أبيض صغير بأذنين طويلتين' },
+                { ar: 'بطريق',  en: 'Penguin',  emoji: '🐧', desc: 'طائر لا يطير يعيش في الثلج' },
+                { ar: 'بومة',   en: 'Owl',      emoji: '🦉', desc: 'طائر الليل الحكيم' },
+            ]
+        },
+        colors: {
+            label: '🎨 ألوان',
+            words: [
+                { ar: 'أحمر',   en: 'Red',    emoji: '🔴', desc: 'لون التفاح والقلب' },
+                { ar: 'أزرق',   en: 'Blue',   emoji: '🔵', desc: 'لون السماء والبحر' },
+                { ar: 'أخضر',   en: 'Green',  emoji: '🟢', desc: 'لون الأشجار والعشب' },
+                { ar: 'أصفر',   en: 'Yellow', emoji: '🟡', desc: 'لون الشمس والموز' },
+                { ar: 'برتقالي',en: 'Orange', emoji: '🟠', desc: 'لون البرتقال والغروب' },
+                { ar: 'بنفسجي', en: 'Purple', emoji: '🟣', desc: 'لون العنب والزهور' },
+                { ar: 'وردي',   en: 'Pink',   emoji: '🌸', desc: 'لون الورود الجميلة' },
+                { ar: 'أبيض',   en: 'White',  emoji: '🤍', desc: 'لون الثلج والغيوم' },
+            ]
+        },
+        vegetables: {
+            label: '🥕 خضروات',
+            words: [
+                { ar: 'جزر',    en: 'Carrot',  emoji: '🥕', desc: 'خضروات برتقالية مغذية' },
+                { ar: 'طماطم',  en: 'Tomato',  emoji: '🍅', desc: 'خضار أحمر مميز' },
+                { ar: 'خيار',   en: 'Cucumber',emoji: '🥒', desc: 'خضار أخضر منعش' },
+                { ar: 'ذرة',    en: 'Corn',    emoji: '🌽', desc: 'حبوب صفراء حلوة' },
+                { ar: 'باذنجان',en: 'Eggplant',emoji: '🍆', desc: 'خضار بنفسجي لذيذ' },
+                { ar: 'بروكلي', en: 'Broccoli',emoji: '🥦', desc: 'خضار أخضر صحي جداً' },
+                { ar: 'بصل',    en: 'Onion',   emoji: '🧅', desc: 'خضار يجعلك تبكي من رائحته!' },
+                { ar: 'ثوم',    en: 'Garlic',  emoji: '🧄', desc: 'خضار أبيض قوي الرائحة' },
+            ]
+        }
+    };
+
+    let currentCategory = 'fruits';
+    let selectedWord = null;
+    let learnedWords = new Set(JSON.parse(localStorage.getItem('learnedWords') || '[]'));
+
+    function renderTabs() {
+        const container = document.getElementById('categoryTabs');
+        container.innerHTML = '';
+        Object.entries(categories).forEach(([key, cat]) => {
+            const btn = document.createElement('button');
+            btn.className = 'cat-tab' + (key === currentCategory ? ' active' : '');
+            btn.innerHTML = cat.label;
+            btn.onclick = () => { currentCategory = key; renderTabs(); renderGrid(); };
+            container.appendChild(btn);
+        });
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('vocabGrid');
+        grid.innerHTML = '';
+        const words = categories[currentCategory].words;
+        let learnedInCat = 0;
+        words.forEach((w, i) => {
+            const id = `${currentCategory}-${i}`;
+            const isLearned = learnedWords.has(id);
+            if (isLearned) learnedInCat++;
+            const card = document.createElement('div');
+            card.className = 'vocab-card' + (isLearned ? ' learned' : '');
+            card.innerHTML = `
+                <span class="vocab-emoji">${w.emoji}</span>
+                <div class="vocab-word">${w.ar}</div>
+                <div class="vocab-english">${w.en}</div>
+            `;
+            card.onclick = () => showDetail(w, id);
+            grid.appendChild(card);
+        });
+        document.getElementById('catLearnedCount').textContent = learnedInCat;
+        document.getElementById('catTotalCount').textContent = words.length;
+    }
+
+    function showDetail(w, id) {
+        selectedWord = { ...w, id };
+        const card = document.getElementById('detailCard');
+        document.getElementById('detailEmoji').textContent = w.emoji;
+        document.getElementById('detailWord').textContent = w.ar;
+        document.getElementById('detailEng').textContent = w.en;
+        document.getElementById('detailDesc').textContent = w.desc;
+        card.classList.add('visible');
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function listenArabic() {
+        if (!selectedWord) return;
+        const u = new SpeechSynthesisUtterance(selectedWord.ar);
+        u.lang = 'ar-SA'; u.rate = 0.8;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+    }
+
+    function listenEnglish() {
+        if (!selectedWord) return;
+        const u = new SpeechSynthesisUtterance(selectedWord.en);
+        u.lang = 'en-US'; u.rate = 0.8;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+    }
+
+    function markLearned() {
+        if (!selectedWord || learnedWords.has(selectedWord.id)) return;
+        learnedWords.add(selectedWord.id);
+        localStorage.setItem('learnedWords', JSON.stringify([...learnedWords]));
+        document.getElementById('learnedCount').textContent = learnedWords.size;
+        try {
+            const session = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+            if (session?.type === 'child') {
+                const accounts = JSON.parse(localStorage.getItem('kidsAppAccounts') || 'null');
+                if (accounts) {
+                    const idx = accounts.children.findIndex(c => String(c.id) === String(session.id));
+                    if (idx !== -1) {
+                        accounts.children[idx].stars = (accounts.children[idx].stars || 0) + 3;
+                        localStorage.setItem('kidsAppAccounts', JSON.stringify(accounts));
+                    }
+                }
+            }
+        } catch(e) {}
+        showToast(`🎉 أحسنتِ! تعلّمتِ كلمة "${selectedWord.ar}" وكسبتِ 3 نجوم!`);
+        createConfetti();
+        renderGrid();
+        /* مزامنة مع API */
+        if (typeof syncActivityToAPI === 'function') {
+            syncActivityToAPI('vocabulary', 3, 0, 1, { wordAr: selectedWord.ar, wordEn: selectedWord.en, wordsCount: 1 });
+        }
+    }
+
+    function showToast(msg) {
+        document.querySelector('.toast')?.remove();
+        const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+        document.body.appendChild(t); setTimeout(() => t.remove(), 3100);
+    }
+
+    function createConfetti() {
+        for (let i = 0; i < 20; i++) {
+            setTimeout(() => {
+                const c = document.createElement('div'); c.className = 'confetti-piece';
+                c.style.left = Math.random() * 100 + 'vw'; c.style.top = '-10px';
+                c.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                c.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+                document.body.appendChild(c); setTimeout(() => c.remove(), 4000);
+            }, i * 80);
+        }
+    }
+
+    // ✅ تحميل عدد الكلمات المتعلمة من الـ API
+    async function loadVocabFromAPI() {
+        const childId = localStorage.getItem('childId');
+        if (!childId) return;
+        try {
+            const childToken = localStorage.getItem('childToken');
+            const token = childToken || localStorage.getItem('token');
+            if (!token) return;
+            const API_BASE = '/api';
+            const resp = await fetch(`${API_BASE}/children/${childId}/progress`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await resp.json();
+            if (data.success && data.data) {
+                const wordsLearned = data.data.words_learned || 0;
+                const el = document.getElementById('learnedCount');
+                if (el) el.textContent = wordsLearned;
+                console.log('✅ Words count loaded from API:', wordsLearned);
+            }
+        } catch(e) { console.warn('Vocab API load failed:', e); }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadVocabFromAPI();
+        try {
+            const session = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+            if (!session || session.type !== 'child') { location.href = '../login.html'; return; }
+        } catch(e) {}
+        renderTabs(); renderGrid();
+        document.getElementById('learnedCount').textContent = learnedWords.size;
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>نجوم التعلم — لوحة الإدارة</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--bg:#0d0022;--card:#1a0040;--border:rgba(255,255,255,.1);--yellow:#FFD700;--green:#00E676;--red:#FF4757;--cyan:#00D4FF;--pink:#FF3D8E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:#fff;min-height:100vh;}
+
+.topbar{background:rgba(26,0,64,.95);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);}
+.topbar h1{font-family:'Baloo Bhaijaan 2',cursive;font-size:20px;display:flex;align-items:center;gap:8px;}
+.topbar h1 span{background:linear-gradient(135deg,#FFD700,#FF7A00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+/* Login gate */
+#loginGate{max-width:400px;margin:80px auto;padding:32px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;}
+#loginGate h2{text-align:center;margin-bottom:20px;font-family:'Baloo Bhaijaan 2',cursive;}
+#loginGate input{width:100%;padding:12px 16px;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:12px;color:#fff;font-size:15px;outline:none;margin-bottom:12px;}
+#loginGate input:focus{border-color:var(--yellow);}
+#loginGate button{width:100%;padding:12px;background:var(--yellow);color:#1a1a2e;border:none;border-radius:999px;font-weight:800;font-size:15px;cursor:pointer;}
+#loginGate .err{color:var(--red);font-size:13px;text-align:center;margin-top:8px;display:none;}
+
+/* Dashboard */
+#dashboard{display:none;padding:24px;max-width:1200px;margin:0 auto;}
+
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+.stat-card{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:18px;padding:20px;text-align:center;}
+.stat-num{font-family:'Baloo Bhaijaan 2',cursive;font-size:32px;font-weight:900;margin-bottom:4px;}
+.stat-label{font-size:13px;color:rgba(255,255,255,.5);}
+.stat-card:nth-child(1) .stat-num{color:var(--cyan);}
+.stat-card:nth-child(2) .stat-num{color:var(--pink);}
+.stat-card:nth-child(3) .stat-num{color:var(--yellow);}
+.stat-card:nth-child(4) .stat-num{color:var(--green);}
+
+.section{margin-bottom:28px;}
+.section-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:18px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+.data-table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.04);border-radius:14px;overflow:hidden;}
+.data-table th{background:rgba(255,255,255,.08);padding:12px 14px;text-align:right;font-size:13px;font-weight:700;color:rgba(255,255,255,.6);border-bottom:1px solid var(--border);}
+.data-table td{padding:10px 14px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.05);}
+.data-table tr:hover td{background:rgba(255,255,255,.03);}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;}
+.badge-ok{background:rgba(0,230,118,.15);color:var(--green);}
+.badge-frozen{background:rgba(255,71,87,.15);color:var(--red);}
+
+.action-btn{background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);padding:5px 10px;border-radius:8px;cursor:pointer;font-size:12px;margin:0 2px;transition:all .2s;}
+.action-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+.action-btn.danger{border-color:rgba(255,71,87,.3);color:var(--red);}
+.action-btn.danger:hover{background:rgba(255,71,87,.15);}
+.action-btn.success{border-color:rgba(0,230,118,.3);color:var(--green);}
+.action-btn.success:hover{background:rgba(0,230,118,.15);}
+
+.refresh-btn{background:rgba(255,255,255,.08);border:1px solid var(--border);color:rgba(255,255,255,.6);padding:8px 16px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;}
+.refresh-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+
+.empty-msg{text-align:center;padding:32px;color:rgba(255,255,255,.35);font-size:14px;}
+
+@media(max-width:768px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .data-table{font-size:12px;}
+  .data-table th,.data-table td{padding:8px 10px;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🛡️ <span>لوحة الإدارة</span></h1>
+  <div>
+    <a href="home.html" style="color:rgba(255,255,255,.5);text-decoration:none;font-size:13px;margin-left:16px;">← الرئيسية</a>
+    <button class="refresh-btn" onclick="loadAll()" id="refreshBtn">🔄 تحديث</button>
+  </div>
+</div>
+
+<!-- Login Gate -->
+<div id="loginGate">
+  <h2>🔐 دخول الإدارة</h2>
+  <input type="password" id="adminKey" placeholder="مفتاح الإدارة (Admin API Key)" autofocus>
+  <button onclick="adminLogin()">دخول</button>
+  <div class="err" id="loginError"></div>
+  <p style="text-align:center;margin-top:14px;font-size:11px;color:rgba(255,255,255,.3);">
+    أدخل مفتاح الإدارة المُعيَّن من مسؤول النظام
+  </p>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card"><div class="stat-num" id="statParents">-</div><div class="stat-label">أولياء الأمور</div></div>
+    <div class="stat-card"><div class="stat-num" id="statChildren">-</div><div class="stat-label">الأطفال</div></div>
+    <div class="stat-card"><div class="stat-num" id="statStars">-</div><div class="stat-label">إجمالي النجوم</div></div>
+    <div class="stat-card"><div class="stat-num" id="statActivities">-</div><div class="stat-label">الأنشطة المنجزة</div></div>
+  </div>
+
+  <!-- Parents Table -->
+  <div class="section">
+    <div class="section-title">👨‍👩‍👧 أولياء الأمور</div>
+    <table class="data-table">
+      <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الأطفال</th><th>الحالة</th><th>تاريخ التسجيل</th><th>إجراءات</th></tr></thead>
+      <tbody id="parentsBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Children Table -->
+  <div class="section">
+    <div class="section-title">👶 الأطفال</div>
+    <table class="data-table">
+      <thead><tr><th>#</th><th>الاسم</th><th>العمر</th><th>الجنس</th><th>ولي الأمر</th><th>النجوم</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+      <tbody id="childrenBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const API = '/api/internal';
+
+let ADMIN_KEY = '';
+
+async function adminFetch(endpoint, options = {}) {
+    const config = {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': ADMIN_KEY,
+            ...options.headers
+        }
+    };
+    if (config.body && typeof config.body === 'object') config.body = JSON.stringify(config.body);
+    const resp = await fetch(API + endpoint, config);
+    return resp.json();
+}
+
+async function adminLogin() {
+    const key = document.getElementById('adminKey').value.trim();
+    if (!key) return;
+    ADMIN_KEY = key;
+
+    try {
+        const data = await adminFetch('/stats');
+        if (data.success) {
+            document.getElementById('loginGate').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            sessionStorage.setItem('adminKey', key);
+            loadAll();
+        } else {
+            showLoginError('❌ مفتاح غير صالح');
+        }
+    } catch (e) {
+        showLoginError('⚠️ تعذّر الاتصال بالخادم');
+    }
+}
+
+function showLoginError(msg) {
+    const el = document.getElementById('loginError');
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+document.getElementById('adminKey').addEventListener('keydown', e => {
+    if (e.key === 'Enter') adminLogin();
+});
+
+async function loadAll() {
+    const btn = document.getElementById('refreshBtn');
+    btn.textContent = '⏳ جاري التحديث...';
+    try {
+        await Promise.all([loadStats(), loadParents(), loadChildren()]);
+    } catch (e) {
+        console.error('Load error:', e);
+    }
+    btn.textContent = '🔄 تحديث';
+}
+
+async function loadStats() {
+    const data = await adminFetch('/stats');
+    if (!data.success) return;
+    const d = data.data;
+    document.getElementById('statParents').textContent = d.totalParents;
+    document.getElementById('statChildren').textContent = d.totalChildren;
+    document.getElementById('statStars').textContent = d.totalStars;
+    document.getElementById('statActivities').textContent = d.totalActivities;
+}
+
+async function loadParents() {
+    const data = await adminFetch('/parents');
+    if (!data.success) return;
+    const tbody = document.getElementById('parentsBody');
+    if (!data.data.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">لا يوجد أولياء أمور مسجلين</td></tr>'; return; }
+
+    tbody.innerHTML = data.data.map(p => `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.name}</td>
+            <td style="font-size:12px;direction:ltr;text-align:right;">${p.email}</td>
+            <td>${p.children_count}</td>
+            <td>${p.is_frozen ? '<span class="badge badge-frozen">مجمّد</span>' : '<span class="badge badge-ok">نشط</span>'}</td>
+            <td style="font-size:12px;">${p.created_at ? new Date(p.created_at).toLocaleDateString('ar-EG') : '-'}</td>
+            <td>
+                ${p.is_frozen
+                    ? `<button class="action-btn success" onclick="unfreezeParent(${p.id})"><i class="fas fa-unlock"></i> رفع التجميد</button>`
+                    : `<button class="action-btn danger" onclick="freezeParent(${p.id})"><i class="fas fa-snowflake"></i> تجميد</button>`}
+                <button class="action-btn danger" onclick="deleteParent(${p.id},'${p.name}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function loadChildren() {
+    const data = await adminFetch('/children');
+    if (!data.success) return;
+    const tbody = document.getElementById('childrenBody');
+    if (!data.data.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">لا يوجد أطفال مسجلين</td></tr>'; return; }
+
+    tbody.innerHTML = data.data.map(c => `
+        <tr>
+            <td>${c.id}</td>
+            <td>${c.name}</td>
+            <td>${c.age}</td>
+            <td>${c.gender === 'boy' ? '👦 ولد' : '👧 بنت'}</td>
+            <td style="font-size:12px;">${c.parent_name || '-'} <br><span style="color:rgba(255,255,255,.4);">${c.parent_email||''}</span></td>
+            <td>⭐ ${c.total_stars}</td>
+            <td>${c.is_frozen ? '<span class="badge badge-frozen">مجمّد</span>' : '<span class="badge badge-ok">نشط</span>'}</td>
+            <td>
+                ${c.is_frozen
+                    ? `<button class="action-btn success" onclick="unfreezeChild(${c.id})"><i class="fas fa-unlock"></i></button>`
+                    : `<button class="action-btn danger" onclick="freezeChild(${c.id})"><i class="fas fa-snowflake"></i></button>`}
+                <button class="action-btn danger" onclick="deleteChild(${c.id},'${c.name}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function freezeParent(id) { await adminFetch(`/parents/${id}/freeze`, {method:'PUT'}); loadAll(); }
+async function unfreezeParent(id) { await adminFetch(`/parents/${id}/unfreeze`, {method:'PUT'}); loadAll(); }
+async function freezeChild(id) { await adminFetch(`/children/${id}/freeze`, {method:'PUT'}); loadAll(); }
+async function unfreezeChild(id) { await adminFetch(`/children/${id}/unfreeze`, {method:'PUT'}); loadAll(); }
+
+async function deleteParent(id, name) {
+    if (!confirm(`⚠️ حذف حساب "${name}"\n\nسيتم حذف:\n• حساب ولي الأمر\n• جميع حسابات أطفاله\n• جميع إحصائياتهم وبياناتهم\n\nهل أنت متأكد؟`)) return;
+    const result = await adminFetch(`/parents/${id}`, {method:'DELETE'});
+    if (result && result.success) {
+        alert(`✅ ${result.message}`);
+    } else if (result) {
+        alert(`❌ خطأ: ${result.error || 'فشل الحذف'}`);
+    }
+    loadAll();
+}
+
+async function deleteChild(id, name) {
+    if (!confirm(`⚠️ حذف حساب الطفل "${name}"\n\nسيتم حذف:\n• حساب الطفل\n• جميع إحصائياته وإنجازاته\n• سجل أنشطته\n\nهل أنت متأكد؟`)) return;
+    const result = await adminFetch(`/children/${id}`, {method:'DELETE'});
+    if (result && result.success) {
+        alert(`✅ ${result.message}`);
+    } else if (result) {
+        alert(`❌ خطأ: ${result.error || 'فشل الحذف'}`);
+    }
+    loadAll();
+}
+
+// Auto-login if key saved in session
+(function(){
+    const saved = sessionStorage.getItem('adminKey');
+    if (saved) {
+        document.getElementById('adminKey').value = saved;
+        adminLogin();
+    }
+})();
+</script>
+</body>
+</html>

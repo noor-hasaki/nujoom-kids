@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنجازاتي - نجوم التعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="activities/activity-shared.css">
+    <style>
+        :root { --hero-start: #FFD700; --hero-end: #FFA502; }
+
+        /* إحصائيات سريعة */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 22px 16px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover { transform: translateY(-5px); }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            display: block; margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            font-family: 'Fredoka', sans-serif;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        /* شارات الإنجاز */
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 18px;
+        }
+
+        .badge-card {
+            background: var(--white);
+            border-radius: 22px;
+            padding: 22px 14px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .badge-card:hover { transform: translateY(-6px) scale(1.03); }
+
+        .badge-card.locked {
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+
+        .badge-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            z-index: 2;
+        }
+
+        .badge-icon { font-size: 3rem; margin-bottom: 10px; display: block; }
+        .badge-name { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+        .badge-desc { font-size: 0.8rem; color: var(--text-light); }
+
+        .badge-card.earned {
+            border: 3px solid #FFD700;
+            background: linear-gradient(135deg, #fffdf0, #fff9db);
+        }
+
+        .badge-card.earned::before {
+            content: '⭐';
+            position: absolute; top: 6px; right: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* شريط التقدم */
+        .progress-section { margin-bottom: 30px; }
+
+        .progress-item {
+            background: var(--white);
+            border-radius: 18px;
+            padding: 18px 22px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 14px;
+        }
+
+        .progress-info {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 10px;
+        }
+
+        .progress-label { font-weight: 700; font-size: 1rem; }
+        .progress-pct   { font-weight: 800; color: var(--primary-color); font-size: 1rem; }
+
+        .prog-bar-wrap {
+            background: #eee; border-radius: 50px;
+            height: 14px; overflow: hidden;
+        }
+
+        .prog-bar-fill {
+            height: 100%; border-radius: 50px;
+            transition: width 1.2s ease;
+        }
+
+        /* جدول الإنجازات الأخيرة */
+        .timeline { position: relative; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            right: 20px; top: 0; bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--primary-color), var(--accent-purple));
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            display: flex; align-items: flex-start;
+            gap: 18px; padding: 0 55px 22px 0;
+            position: relative;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            right: 11px; top: 4px;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 3px solid var(--white);
+            box-shadow: 0 0 0 3px rgba(108,92,231,0.3);
+            flex-shrink: 0;
+        }
+
+        .timeline-content {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 14px 18px;
+            box-shadow: var(--card-shadow);
+            flex: 1;
+        }
+
+        .timeline-title { font-weight: 700; font-size: 0.95rem; }
+        .timeline-time  { font-size: 0.8rem; color: var(--text-light); margin-top: 3px; }
+        .timeline-emoji { font-size: 1.5rem; flex-shrink: 0; }
+
+        /* مستوى الطفل */
+        .level-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-purple));
+            border-radius: 22px; padding: 28px;
+            color: var(--white); text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .level-icon  { font-size: 4rem; display: block; margin-bottom: 10px; }
+        .level-name  { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
+        .level-desc  { font-size: 0.95rem; opacity: 0.9; }
+        .level-stars { font-size: 1.8rem; margin-top: 12px; letter-spacing: 4px; }
+
+        .xp-bar-wrap {
+            background: rgba(255,255,255,0.2);
+            border-radius: 50px; height: 16px;
+            margin-top: 14px; overflow: hidden;
+        }
+
+        .xp-bar-fill {
+            background: #FFD700; height: 100%;
+            border-radius: 50px; transition: width 1.5s ease;
+        }
+
+        .xp-label { font-size: 0.85rem; opacity: 0.85; margin-top: 6px; }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="container header-content">
+        <a href="dashboard.html" class="logo">
+            <i class="fas fa-rocket"></i><span>عالم التعلم</span>
+        </a>
+        <a href="dashboard.html" class="back-btn">
+            <i class="fas fa-arrow-right"></i><span>العودة</span>
+        </a>
+    </div>
+</header>
+
+<div class="page-hero">
+    <span class="hero-icon">🏆</span>
+    <h1>إنجازاتي</h1>
+    <p>شاهدي نجومك ومكافآتك ومستواك!</p>
+</div>
+
+<main class="container">
+
+    <!-- مستوى الطفل -->
+    <div class="level-section" id="levelSection">
+        <span class="level-icon" id="levelIcon">⭐</span>
+        <div class="level-name" id="levelName">مستكشفة صغيرة</div>
+        <div class="level-desc" id="levelDesc">استمري بالتعلم للوصول للمستوى التالي!</div>
+        <div class="level-stars" id="levelStars">⭐</div>
+        <div class="xp-bar-wrap">
+            <div class="xp-bar-fill" id="xpBar" style="width:0%"></div>
+        </div>
+        <div class="xp-label" id="xpLabel">0 / 50 نجمة للمستوى التالي</div>
+    </div>
+
+    <!-- إحصائيات سريعة -->
+    <div class="quick-stats">
+        <div class="stat-card">
+            <span class="stat-icon">⭐</span>
+            <span class="stat-value" id="statStars">0</span>
+            <span class="stat-label">إجمالي النجوم</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📖</span>
+            <span class="stat-value" id="statStories">0</span>
+            <span class="stat-label">قصة قرأتُها</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">📝</span>
+            <span class="stat-value" id="statWords">0</span>
+            <span class="stat-label">كلمة تعلّمتُها</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🎮</span>
+            <span class="stat-value" id="statGames">0</span>
+            <span class="stat-label">نقطة ألعاب</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🔤</span>
+            <span class="stat-value" id="statLetters">0</span>
+            <span class="stat-label">حرف تعلّمتُه</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🎨</span>
+            <span class="stat-value" id="statDrawings">0</span>
+            <span class="stat-label">رسمة أنجزتُها</span>
+        </div>
+    </div>
+
+    <!-- تقدم الأنشطة -->
+    <section class="activity-section" style="margin-bottom:25px;">
+        <h2 style="margin-bottom:20px; font-size:1.3rem;">
+            <i class="fas fa-chart-line" style="color:var(--primary-color);"></i> تقدّم الأنشطة
+        </h2>
+        <div class="progress-section" id="progressItems"></div>
+    </section>
+
+    <!-- شارات الإنجاز -->
+    <section class="activity-section" style="margin-bottom:25px;">
+        <h2 style="margin-bottom:20px; font-size:1.3rem;">
+            <i class="fas fa-medal" style="color:#FFD700;"></i> شاراتي
+        </h2>
+        <div class="badges-grid" id="badgesGrid"></div>
+    </section>
+
+    <!-- آخر الإنجازات -->
+    <section class="activity-section">
+        <h2 style="margin-bottom:20px; font-size:1.3rem;">
+            <i class="fas fa-history" style="color:var(--accent-orange);"></i> آخر الإنجازات
+        </h2>
+        <div class="timeline" id="timeline"></div>
+    </section>
+
+</main>
+
+<footer class="page-footer"><p>صنع بحب ❤️ لتعليم أطفالنا</p></footer>
+
+<script>
+    const levels = [
+        { name: 'مستكشفة صغيرة', icon: '🌱', min: 0,   max: 50,  stars: '⭐',      desc: 'بداية رائعة! استمري بالتعلم!' },
+        { name: 'متعلمة نشيطة',   icon: '📚', min: 50,  max: 150, stars: '⭐⭐',    desc: 'ممتاز! أنتِ تتقدمين بسرعة!' },
+        { name: 'بطلة الحروف',     icon: '🔤', min: 150, max: 300, stars: '⭐⭐⭐',  desc: 'رائع! أصبحتِ خبيرة بالحروف!' },
+        { name: 'عبقرية صغيرة',    icon: '🧠', min: 300, max: 500, stars: '⭐⭐⭐⭐', desc: 'مذهل! ذكاؤكِ يبهر الجميع!' },
+        { name: 'نجمة المستقبل',   icon: '🌟', min: 500, max: 999, stars: '🏆',     desc: 'أنتِ نجمة حقيقية! أحسنتِ!' },
+    ];
+
+    const badges = [
+        { id: 'first_star', icon: '⭐', name: 'أول نجمة',      desc: 'احصلي على نجمتك الأولى',   condition: d => d.stars >= 1 },
+        { id: 'reader',     icon: '📖', name: 'قارئة نشيطة',   desc: 'اقرئي 2 قصص',              condition: d => d.stories >= 2 },
+        { id: 'vocab',      icon: '🗣️', name: 'واسعة المفردات', desc: 'تعلّمي 10 كلمات',           condition: d => d.words >= 10 },
+        { id: 'gamer',      icon: '🎮', name: 'لاعبة ماهرة',   desc: 'احصلي على 30 نقطة ألعاب', condition: d => d.games >= 30 },
+        { id: 'artist',     icon: '🎨', name: 'فنانة موهوبة',   desc: 'احفظي 3 رسومات',           condition: d => d.drawings >= 3 },
+        { id: 'letters_ar', icon: '🔤', name: 'عارفة الحروف',   desc: 'تعلّمي 5 حروف عربية',      condition: d => d.arabicLetters >= 5 },
+        { id: 'math_star',  icon: '🔢', name: 'نجمة الأرقام',   desc: 'احصلي على 20 نجمة رياضيات', condition: d => d.mathStars >= 20 },
+        { id: 'all_stories',icon: '📚', name: 'كتبت الكتب',     desc: 'اقرئي جميع القصص الـ4',    condition: d => d.stories >= 4 },
+    ];
+
+    // ✅ تحميل البيانات من الـ API أولاً ثم localStorage كبديل احتياطي
+    async function loadDataFromAPI() {
+        const childId = localStorage.getItem('childId');
+        if (!childId) return null;
+        try {
+            // استخدم childToken إذا توفر
+            const childToken = localStorage.getItem('childToken');
+            const headers = { 'Content-Type': 'application/json' };
+            if (childToken) headers['Authorization'] = 'Bearer ' + childToken;
+            else {
+                const token = localStorage.getItem('token');
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+            }
+            const API_BASE = '/api';
+            const resp = await fetch(`${API_BASE}/children/${childId}/progress`, { headers });
+            const data = await resp.json();
+            if (data.success && data.data) return data.data;
+        } catch(e) { console.warn('API fetch failed:', e); }
+        return null;
+    }
+
+    function loadData() {
+        // قيم من localStorage كبديل احتياطي
+        const progress = JSON.parse(localStorage.getItem('childLearningProgress') || '{}');
+        return {
+            stars:         parseInt(progress.starsEarned || progress.stars || 0),
+            stories:       JSON.parse(localStorage.getItem('readStories') || '[]').length,
+            words:         JSON.parse(localStorage.getItem('learnedWords') || '[]').length,
+            games:         parseInt(localStorage.getItem('gamesScore') || 0),
+            drawings:      parseInt(localStorage.getItem('savedDrawings') || 0),
+            arabicLetters: (progress.completedArabic || []).length,
+            mathStars:     parseInt(localStorage.getItem('mathStars') || 0),
+        };
+    }
+
+    function getLevel(stars) {
+        for (let i = levels.length - 1; i >= 0; i--) {
+            if (stars >= levels[i].min) return { ...levels[i], index: i };
+        }
+        return { ...levels[0], index: 0 };
+    }
+
+    async function render() {
+        // ✅ محاولة جلب البيانات من الـ API
+        const apiData = await loadDataFromAPI();
+        let d;
+        if (apiData) {
+            d = {
+                stars:         apiData.total_stars    || 0,
+                stories:       apiData.stories_read   || 0,
+                words:         apiData.words_learned  || 0,
+                games:         apiData.games_score    || 0,
+                drawings:      apiData.drawings_saved || 0,
+                arabicLetters: 0, // لا توجد في الـ API حالياً
+                mathStars:     apiData.math_stars     || 0,
+            };
+            console.log('✅ Achievements loaded from API:', d.stars, 'stars');
+        } else {
+            // Fallback للـ localStorage
+            d = loadData();
+            console.log('⚠️ Using localStorage fallback for achievements');
+        }
+
+        // إحصائيات
+        document.getElementById('statStars').textContent    = d.stars;
+        document.getElementById('statStories').textContent  = d.stories;
+        document.getElementById('statWords').textContent    = d.words;
+        document.getElementById('statGames').textContent    = d.games;
+        document.getElementById('statLetters').textContent  = d.arabicLetters;
+        document.getElementById('statDrawings').textContent = d.drawings;
+
+        // المستوى
+        const lvl = getLevel(d.stars);
+        document.getElementById('levelIcon').textContent  = lvl.icon;
+        document.getElementById('levelName').textContent  = lvl.name;
+        document.getElementById('levelDesc').textContent  = lvl.desc;
+        document.getElementById('levelStars').textContent = lvl.stars;
+        const pct = Math.min(100, Math.round(((d.stars - lvl.min) / (lvl.max - lvl.min)) * 100));
+        setTimeout(() => {
+            document.getElementById('xpBar').style.width = pct + '%';
+        }, 400);
+        document.getElementById('xpLabel').textContent = `${d.stars - lvl.min} / ${lvl.max - lvl.min} نجمة للمستوى التالي`;
+
+        // تقدم الأنشطة
+        const activities = [
+            { label: '🔤 الحروف العربية',    value: d.arabicLetters, max: 28, color: '#00B894' },
+            { label: '📖 القصص',             value: d.stories,       max: 4,  color: '#6C5CE7' },
+            { label: '🗣️ المفردات',          value: d.words,         max: 32, color: '#FF7675' },
+            { label: '🎮 الألعاب (نقاط/100)', value: Math.min(d.games, 100), max: 100, color: '#00CEC9' },
+        ];
+
+        const progContainer = document.getElementById('progressItems');
+        progContainer.innerHTML = '';
+        activities.forEach(a => {
+            const pct = Math.min(100, Math.round((a.value / a.max) * 100));
+            const div = document.createElement('div');
+            div.className = 'progress-item';
+            div.innerHTML = `
+                <div class="progress-info">
+                    <span class="progress-label">${a.label}</span>
+                    <span class="progress-pct">${pct}%</span>
+                </div>
+                <div class="prog-bar-wrap">
+                    <div class="prog-bar-fill" style="background:${a.color}; width:0%;" data-target="${pct}"></div>
+                </div>
+            `;
+            progContainer.appendChild(div);
+        });
+
+        setTimeout(() => {
+            document.querySelectorAll('.prog-bar-fill').forEach(bar => {
+                bar.style.width = bar.dataset.target + '%';
+            });
+        }, 400);
+
+        // الشارات
+        const grid = document.getElementById('badgesGrid');
+        grid.innerHTML = '';
+        badges.forEach(b => {
+            const earned = b.condition(d);
+            const card = document.createElement('div');
+            card.className = 'badge-card' + (earned ? ' earned' : ' locked');
+            card.innerHTML = `
+                <span class="badge-icon">${b.icon}</span>
+                <div class="badge-name">${b.name}</div>
+                <div class="badge-desc">${earned ? '✅ حصلتِ عليها!' : b.desc}</div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // التسلسل الزمني
+        const timeline = document.getElementById('timeline');
+        const events = [];
+        if (d.stars > 0)           events.push({ emoji: '⭐', title: `حصلتِ على ${d.stars} نجمة`,       time: 'منذ قليل' });
+        if (d.stories > 0)          events.push({ emoji: '📖', title: `قرأتِ ${d.stories} قصة`,           time: 'اليوم' });
+        if (d.words > 0)            events.push({ emoji: '🗣️', title: `تعلّمتِ ${d.words} كلمة جديدة`,    time: 'اليوم' });
+        if (d.arabicLetters > 0)    events.push({ emoji: '🔤', title: `أتقنتِ ${d.arabicLetters} حرف عربي`,time: 'اليوم' });
+        if (d.games > 0)            events.push({ emoji: '🎮', title: `جمعتِ ${d.games} نقطة في الألعاب`, time: 'اليوم' });
+        if (d.drawings > 0)         events.push({ emoji: '🎨', title: `رسمتِ ${d.drawings} لوحة جميلة`,   time: 'اليوم' });
+
+        if (events.length === 0) {
+            timeline.innerHTML = '<p style="text-align:center; color:var(--text-light); padding:20px;">لا توجد إنجازات بعد، ابدئي التعلم الآن! 🚀</p>';
+        } else {
+            timeline.innerHTML = '';
+            events.forEach(e => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.innerHTML = `
+                    <div class="timeline-dot"></div>
+                    <span class="timeline-emoji">${e.emoji}</span>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${e.title}</div>
+                        <div class="timeline-time">${e.time}</div>
+                    </div>
+                `;
+                timeline.appendChild(item);
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', render);
+</script>
+<script src="api.js"></script>
+</body>
+</html>

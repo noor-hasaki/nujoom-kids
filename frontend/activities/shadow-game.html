@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة مطابقة الظل - نجوم التعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="activity-shared.css">
+    <style>
+        :root { --hero-start: #6C5CE7; --hero-end: #a29bfe; }
+
+        * { user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        /* === شاشة الاختيار === */
+        .levels-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .level-select-btn {
+            background: linear-gradient(135deg, #6C5CE7, #a29bfe);
+            color: white;
+            padding: 22px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1rem;
+            font-weight: 800;
+            transition: all 0.3s;
+            box-shadow: 0 6px 18px rgba(108,92,231,0.3);
+            text-align: center;
+        }
+
+        .level-select-btn:hover { transform: translateY(-5px); box-shadow: 0 12px 28px rgba(108,92,231,0.4); }
+        .level-select-btn .btn-level-num { font-size: 2rem; display: block; margin-bottom: 6px; }
+        .level-select-btn .btn-shapes { font-size: 0.85rem; opacity: 0.9; }
+
+        /* === منطقة اللعب === */
+        #game { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .game-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .game-level-title {
+            font-family: 'Cairo', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #2d3436;
+        }
+
+        .btn-back-game {
+            background: #b2bec3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .btn-back-game:hover { background: #636e72; }
+
+        .btn-next-level {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 800;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            animation: pop 0.5s;
+        }
+
+        @keyframes pop { 0%{transform:scale(0.8)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
+        .btn-next-level:hover { transform: scale(1.05); }
+
+        /* === شريط الوقت === */
+        .timer-bar {
+            width: 100%;
+            height: 10px;
+            background: #dfe6e9;
+            border-radius: 5px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00b894, #ff7675);
+            width: 100%;
+            transition: width 1s linear;
+            border-radius: 5px;
+        }
+
+        /* === رسالة الحالة === */
+        .game-message {
+            font-size: 1.1rem;
+            font-weight: 700;
+            min-height: 36px;
+            margin-bottom: 16px;
+            text-align: center;
+            color: #6c5ce7;
+            padding: 8px 16px;
+            border-radius: 12px;
+            background: rgba(108,92,231,0.07);
+        }
+
+        .game-message.error   { color: #e74c3c; background: rgba(231,76,60,0.08); }
+        .game-message.success { color: #00b894; background: rgba(0,184,148,0.1); }
+
+        /* === شبكة الظلال === */
+        .targets-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 28px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 18px;
+            min-height: 120px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .target-box {
+            width: 90px;
+            height: 90px;
+            border: 3px dashed #b2bec3;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            transition: all 0.3s;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .target-box svg { width: 60%; height: 60%; fill: #b2bec3; transition: all 0.3s; }
+        .target-box.matched { border-color: #00b894; background: #d4edda; border-style: solid; transform: scale(1.06); }
+        .target-box.matched svg { fill: #00b894; }
+        .target-box.wrong { border-color: #e74c3c; background: #ffebee; animation: shake 0.4s; }
+
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+        /* === الأشكال الملونة === */
+        .shapes-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+            min-height: 100px;
+            padding: 20px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .draggable {
+            width: 80px;
+            height: 80px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s;
+            border-radius: 12px;
+        }
+
+        .draggable:active { cursor: grabbing; transform: scale(1.1); }
+        .draggable svg { width: 100%; height: 100%; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2)); pointer-events: none; }
+        .draggable.hidden { opacity: 0; pointer-events: none; transform: scale(0); }
+
+        .dragging-clone {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.9;
+            transform: scale(1.2);
+            filter: drop-shadow(5px 10px 12px rgba(0,0,0,0.3));
+        }
+
+        /* === الكونفيتي === */
+        .confetti-p {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            animation: fall-c 2s linear forwards;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        @keyframes fall-c { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        /* === النقاط === */
+        .score-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #6C5CE7, #a29bfe);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .score-pill {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="container header-content">
+        <a href="../dashboard.html" class="logo">
+            <i class="fas fa-rocket"></i><span>عالم التعلم</span>
+        </a>
+        <a href="../dashboard.html" class="back-btn">
+            <i class="fas fa-arrow-right"></i><span>العودة</span>
+        </a>
+    </div>
+</header>
+
+<div class="page-hero">
+    <span class="hero-icon">🎨</span>
+    <h1>لعبة مطابقة الظل</h1>
+    <p>طابق الأشكال الملونة مع ظلالها!</p>
+</div>
+
+<main class="container">
+
+    <!-- اختيار المرحلة -->
+    <div id="menu">
+        <div class="stars-bar">
+            <i class="fas fa-star"></i>
+            <span>نقاطي: <strong id="menuScore">0</strong> 🏆</span>
+        </div>
+        <div class="activity-section">
+            <h2 style="margin-bottom:20px; font-size:1.2rem;">
+                <i class="fas fa-layer-group" style="color:#6C5CE7;"></i> اختاري المرحلة
+            </h2>
+            <div class="levels-menu">
+                <button class="level-select-btn" onclick="startGame(1)">
+                    <span class="btn-level-num">1️⃣</span>
+                    المرحلة الأولى
+                    <div class="btn-shapes">4 أشكال</div>
+                </button>
+                <button class="level-select-btn" onclick="startGame(2)">
+                    <span class="btn-level-num">2️⃣</span>
+                    المرحلة الثانية
+                    <div class="btn-shapes">6 أشكال</div>
+                </button>
+                <button class="level-select-btn" onclick="startGame(3)">
+                    <span class="btn-level-num">3️⃣</span>
+                    المرحلة الثالثة
+                    <div class="btn-shapes">8 أشكال</div>
+                </button>
+                <button class="level-select-btn" onclick="startGame(4)">
+                    <span class="btn-level-num">4️⃣</span>
+                    المرحلة الرابعة
+                    <div class="btn-shapes">10 أشكال</div>
+                </button>
+                <button class="level-select-btn" onclick="startGame(5)">
+                    <span class="btn-level-num">5️⃣</span>
+                    المرحلة الخامسة
+                    <div class="btn-shapes">12 شكل</div>
+                </button>
+                <button class="level-select-btn" onclick="startGame(6)">
+                    <span class="btn-level-num">⏱️</span>
+                    مع مؤقت!
+                    <div class="btn-shapes">12 شكل — تحدي الوقت</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- منطقة اللعب -->
+    <div id="game">
+        <div class="score-bar">
+            <span>🎨 مطابقة الظل</span>
+            <span class="score-pill">نقاط: <span id="gameScore">0</span> ⭐</span>
+        </div>
+
+        <div class="game-topbar">
+            <button class="btn-back-game" onclick="backToMenu()">
+                <i class="fas fa-arrow-right"></i> القائمة
+            </button>
+            <div class="game-level-title" id="levelTitle">المرحلة 1</div>
+            <div id="nextBtnContainer">
+                <button class="btn-next-level" id="nextLevelBtn" onclick="nextLevel()" style="display:none;">
+                    <i class="fas fa-forward"></i> المرحلة التالية
+                </button>
+            </div>
+        </div>
+
+        <div class="timer-bar" id="timerBar">
+            <div class="timer-fill" id="timerFill"></div>
+        </div>
+
+        <div class="game-message" id="message">اسحب كل شكل ملون فوق ظله الرمادي 🎯</div>
+
+        <div class="targets-grid" id="targets"></div>
+        <div class="shapes-area" id="shapes"></div>
+    </div>
+
+</main>
+
+<footer class="page-footer"><p>صنع بحب ❤️ لتعليم أطفالنا</p></footer>
+
+<script src="../api.js"></script>
+<script>
+// بيانات الأشكال
+const shapesData = [
+    {id:'heart', path:'M50 85 C20 60 10 35 30 35 C38 35 45 42 50 42 C55 42 62 35 70 35 C90 35 80 60 50 85 Z'},
+    {id:'rect', path:'M15 25 h70 v50 h-70 z'},
+    {id:'square', path:'M15 15 h70 v70 h-70 z'},
+    {id:'circle', path:'M50 20 a30 30 0 1 0 0.1 0 z'},
+    {id:'triangle', path:'M50 15 L85 80 L15 80 Z'},
+    {id:'star', path:'M50 15 L61 35 L85 35 L66 50 L73 75 L50 60 L27 75 L34 50 L15 35 L39 35 Z'},
+    {id:'diamond', path:'M50 15 L85 50 L50 85 L15 50 Z'},
+    {id:'cloud', path:'M25 65 A15 15 0 0 1 25 35 A20 20 0 0 1 55 35 A15 15 0 0 1 75 65 Z'},
+    {id:'moon', path:'M30 15 A35 35 0 1 0 65 75 A25 25 0 0 1 30 15 Z'},
+    {id:'oval', path:'M50 30 A35 20 0 1 0 50 70 A35 20 0 1 0 50 30 z'},
+    {id:'capsule', path:'M35 15 h30 a20 20 0 0 1 0 70 h-30 a20 20 0 0 1 0 -70 z'},
+    {id:'hexagon', path:'M50 15 L80 32 L80 68 L50 85 L20 68 L20 32 Z'}
+];
+
+const colors = ['#e74c3c','#3498db','#2ecc71','#f1c40f','#9b59b6','#e67e22','#1abc9c','#34495e','#d35400','#7f8c8d','#ff7675','#74b9ff'];
+
+let currentLevel = 1;
+let matchedCount = 0;
+let totalShapes = 0;
+let activeDrag = null;
+let dragClone = null;
+let offsetX, offsetY;
+let timerInterval = null;
+let timeLeft = 0;
+let gameScore = parseInt(localStorage.getItem('shadowGameScore') || '0');
+
+// صوت
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    if (type === 'correct') {
+        o.frequency.setValueAtTime(523, now);
+        o.frequency.exponentialRampToValueAtTime(784, now + 0.1);
+        g.gain.setValueAtTime(0.3, now);
+        g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        o.start(now); o.stop(now + 0.3);
+    } else if (type === 'wrong') {
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(150, now);
+        g.gain.setValueAtTime(0.2, now);
+        g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        o.start(now); o.stop(now + 0.3);
+    } else if (type === 'win') {
+        [523, 659, 784, 1047].forEach((f, i) => {
+            const o2 = audioCtx.createOscillator();
+            const g2 = audioCtx.createGain();
+            o2.connect(g2); g2.connect(audioCtx.destination);
+            o2.frequency.value = f;
+            g2.gain.setValueAtTime(0.2, now + i*0.15);
+            g2.gain.exponentialRampToValueAtTime(0.01, now + i*0.15 + 0.4);
+            o2.start(now + i*0.15); o2.stop(now + i*0.15 + 0.4);
+        });
+    }
+}
+
+function updateScoreDisplay() {
+    document.getElementById('gameScore').textContent = gameScore;
+    document.getElementById('menuScore').textContent = gameScore;
+    localStorage.setItem('shadowGameScore', gameScore);
+}
+
+function startGame(level) {
+    currentLevel = level;
+    clearInterval(timerInterval);
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    document.getElementById('levelTitle').textContent = 'المرحلة ' + level;
+    document.getElementById('message').textContent = 'اسحب كل شكل ملون فوق ظله الرمادي 🎯';
+    document.getElementById('message').className = 'game-message';
+    document.getElementById('nextLevelBtn').style.display = 'none';
+    document.getElementById('nextLevelBtn').style.cssText = 'display:none;';
+
+    const timerBar = document.getElementById('timerBar');
+    timerBar.style.display = level === 6 ? 'block' : 'none';
+
+    const count = level === 1 ? 4 : level === 2 ? 6 : level === 3 ? 8 : level === 4 ? 10 : 12;
+    setupBoard(count);
+
+    if (level === 6) {
+        timeLeft = 90;
+        updateTimerBar();
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerBar();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                const msgEl = document.getElementById('message');
+                msgEl.textContent = '⏰ انتهى الوقت! حاولي مرة أخرى';
+                msgEl.className = 'game-message error';
+                playSound('wrong');
+                setTimeout(() => startGame(6), 2000);
+            }
+        }, 1000);
+    }
+}
+
+function updateTimerBar() {
+    document.getElementById('timerFill').style.width = (timeLeft / 90 * 100) + '%';
+}
+
+function setupBoard(count) {
+    const targetsDiv = document.getElementById('targets');
+    const shapesDiv = document.getElementById('shapes');
+    targetsDiv.innerHTML = ''; shapesDiv.innerHTML = '';
+    matchedCount = 0; totalShapes = count;
+
+    const selected = [...shapesData].sort(() => Math.random() - 0.5).slice(0, count);
+
+    selected.forEach(shape => {
+        const box = document.createElement('div');
+        box.className = 'target-box';
+        box.dataset.id = shape.id;
+        box.innerHTML = `<svg viewBox="0 0 100 100"><path d="${shape.path}" /></svg>`;
+        targetsDiv.appendChild(box);
+    });
+
+    selected.sort(() => Math.random() - 0.5).forEach((shape, idx) => {
+        const el = document.createElement('div');
+        el.className = 'draggable';
+        el.dataset.id = shape.id;
+        el.dataset.color = colors[idx % colors.length];
+        el.innerHTML = `<svg viewBox="0 0 100 100" fill="${colors[idx % colors.length]}"><path d="${shape.path}" /></svg>`;
+        el.addEventListener('mousedown', startDrag);
+        el.addEventListener('touchstart', startDrag, {passive: false});
+        shapesDiv.appendChild(el);
+    });
+}
+
+function startDrag(e) {
+    e.preventDefault();
+    activeDrag = e.target.closest('.draggable');
+    if (!activeDrag) return;
+    dragClone = activeDrag.cloneNode(true);
+    dragClone.classList.add('dragging-clone');
+    dragClone.style.width = activeDrag.offsetWidth + 'px';
+    dragClone.style.height = activeDrag.offsetHeight + 'px';
+    document.body.appendChild(dragClone);
+    const touch = e.touches ? e.touches[0] : e;
+    const rect = activeDrag.getBoundingClientRect();
+    offsetX = touch.clientX - rect.left;
+    offsetY = touch.clientY - rect.top;
+    activeDrag.style.opacity = '0.3';
+    moveDrag(touch.clientX, touch.clientY);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onTouchMove, {passive: false});
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchend', onEnd);
+}
+
+function onMove(e) { moveDrag(e.clientX, e.clientY); }
+function onTouchMove(e) { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); }
+function moveDrag(x, y) { if (dragClone) { dragClone.style.left = (x - offsetX) + 'px'; dragClone.style.top = (y - offsetY) + 'px'; } }
+
+function onEnd(e) {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('touchmove', onTouchMove);
+    document.removeEventListener('mouseup', onEnd);
+    document.removeEventListener('touchend', onEnd);
+    if (!dragClone || !activeDrag) return;
+
+    const cloneRect = dragClone.getBoundingClientRect();
+    const cx = cloneRect.left + cloneRect.width / 2;
+    const cy = cloneRect.top + cloneRect.height / 2;
+
+    let matched = false;
+    document.querySelectorAll('.target-box').forEach(target => {
+        if (matched) return;
+        const tRect = target.getBoundingClientRect();
+        if (cx >= tRect.left && cx <= tRect.right && cy >= tRect.top && cy <= tRect.bottom) {
+            if (target.dataset.id === activeDrag.dataset.id) {
+                matched = true;
+                successMatch(activeDrag, target);
+            } else {
+                playSound('wrong');
+                target.classList.add('wrong');
+                const msgEl = document.getElementById('message');
+                msgEl.textContent = '❌ غلط! حاولي مرة أخرى';
+                msgEl.className = 'game-message error';
+                setTimeout(() => {
+                    target.classList.remove('wrong');
+                    if (matchedCount < totalShapes) {
+                        const m = document.getElementById('message');
+                        m.textContent = 'اسحب كل شكل ملون فوق ظله الرمادي 🎯';
+                        m.className = 'game-message';
+                    }
+                }, 1000);
+            }
+        }
+    });
+
+    if (!matched) activeDrag.style.opacity = '1';
+    dragClone.remove(); dragClone = null; activeDrag = null;
+}
+
+function successMatch(source, target) {
+    const svgInside = target.querySelector('svg');
+    svgInside.setAttribute('fill', source.dataset.color);
+    svgInside.style.opacity = '1';
+    target.classList.add('matched');
+    source.classList.add('hidden');
+    playSound('correct');
+    matchedCount++;
+
+    // نقاط مقابل كل تطابق
+    const pts = currentLevel * 5;
+    gameScore += pts;
+    updateScoreDisplay();
+
+    if (matchedCount === totalShapes) {
+        clearInterval(timerInterval);
+        const msgEl = document.getElementById('message');
+        msgEl.textContent = '🎉 أحسنتِ! أنهيتِ المرحلة بنجاح!';
+        msgEl.className = 'game-message success';
+        const nextBtn = document.getElementById('nextLevelBtn');
+        nextBtn.style.display = 'inline-flex';
+        playSound('win');
+        if (currentLevel >= 5) spawnConfetti();
+
+        // مزامنة مع API
+        const starsEarned = Math.floor(gameScore / 10);
+        if (typeof syncActivityToAPI === 'function') {
+            syncActivityToAPI('games', starsEarned, gameScore, currentLevel, {
+                gameType: 'shadow_match', level: currentLevel, matched: matchedCount
+            });
+        }
+        // تحديث النجوم في localStorage
+        try {
+            const session = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+            if (session?.type === 'child') {
+                const accounts = JSON.parse(localStorage.getItem('kidsAppAccounts') || 'null');
+                if (accounts) {
+                    const idx = accounts.children?.findIndex?.(c => String(c.id) === String(session.id));
+                    if (idx !== -1 && idx !== undefined) {
+                        accounts.children[idx].stars = (accounts.children[idx].stars || 0) + starsEarned;
+                        localStorage.setItem('kidsAppAccounts', JSON.stringify(accounts));
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+function nextLevel() {
+    if (currentLevel < 6) startGame(currentLevel + 1);
+    else {
+        const msgEl = document.getElementById('message');
+        msgEl.textContent = '🏆 مبروك! ختمتِ كل المراحل بنجاح!';
+        msgEl.className = 'game-message success';
+        spawnConfetti();
+        document.getElementById('nextLevelBtn').style.display = 'none';
+    }
+}
+
+function backToMenu() {
+    clearInterval(timerInterval);
+    document.getElementById('menu').style.display = 'block';
+    document.getElementById('game').style.display = 'none';
+    updateScoreDisplay();
+}
+
+function spawnConfetti() {
+    const cols = ['#ff7675','#74b9ff','#55efc4','#ffeaa7','#a29bfe','#fd79a8'];
+    for (let i = 0; i < 80; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti-p';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.top = '-10px';
+        c.style.background = cols[Math.floor(Math.random() * cols.length)];
+        c.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+        c.style.width = (6 + Math.random() * 8) + 'px';
+        c.style.height = (6 + Math.random() * 8) + 'px';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 4000);
+    }
+}
+
+// تهيئة
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        const session = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+        if (!session || session.type !== 'child') location.href = '../login.html';
+    } catch(e) {}
+    updateScoreDisplay();
+});
+</script>
+</body>
+</html>

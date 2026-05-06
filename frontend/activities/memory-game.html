@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الذاكرة - نجوم التعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="activity-shared.css">
+    <style>
+        :root { --hero-start: #FF7A00; --hero-end: #FF3D8E; }
+
+        /* === اختيار المستوى === */
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .level-card {
+            background: white;
+            border-radius: 22px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .level-card:hover { transform: translateY(-6px); box-shadow: 0 14px 32px rgba(0,0,0,0.15); }
+        .level-card.easy   { border-color: #00b894; }
+        .level-card.medium { border-color: #0984E3; }
+        .level-card.hard   { border-color: #e67e22; }
+        .level-card.expert { border-color: #e74c3c; }
+        .level-card.pro    { border-color: #8e44ad; }
+
+        .level-card:hover.easy   { background: #f0fff8; }
+        .level-card:hover.medium { background: #f0f6ff; }
+        .level-card:hover.hard   { background: #fff8f0; }
+        .level-card:hover.expert { background: #fff0f0; }
+        .level-card:hover.pro    { background: #f8f0ff; }
+
+        .level-icon  { font-size: 2.8rem; display: block; margin-bottom: 10px; }
+        .level-name  { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+        .level-desc  { font-size: 0.82rem; color: var(--text-light); }
+
+        /* === منطقة اللعب === */
+        #gameArea { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .game-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .game-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+
+        .stat-pill {
+            background: var(--bg-light);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timer-pill {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timer-pill.active { display: flex; }
+
+        .btn-change-level {
+            background: linear-gradient(135deg, #FF7A00, #FF3D8E);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .btn-change-level:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,61,142,0.35); }
+
+        /* === بطاقات الذاكرة === */
+        .memory-grid {
+            display: grid;
+            gap: 12px;
+            max-width: 640px;
+            margin: 0 auto 24px;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            border-radius: 16px;
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+
+        .memory-card.flipped { transform: rotateY(180deg); }
+        .memory-card.matched { cursor: default; }
+
+        .card-front, .card-back {
+            position: absolute; inset: 0;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            backface-visibility: hidden;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #FF7A00, #FF3D8E);
+            transform: rotateY(180deg);
+            box-shadow: 0 4px 15px rgba(255,61,142,0.3);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+            border: 3px solid #d0d9f0;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+
+        .memory-card.matched .card-front {
+            background: linear-gradient(135deg, #00b894, #38EF7D);
+            animation: matchPop 0.4s ease;
+        }
+
+        @keyframes matchPop {
+            0%   { transform: rotateY(180deg) scale(1); }
+            50%  { transform: rotateY(180deg) scale(1.12); }
+            100% { transform: rotateY(180deg) scale(1); }
+        }
+
+        /* === النتيجة === */
+        .score-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #FF7A00, #FF3D8E);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+            font-weight: 800;
+        }
+
+        .score-pill {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+        }
+
+        /* === رسالة === */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--primary-color); color: white;
+            padding: 12px 28px; border-radius: 50px;
+            font-weight: 700; z-index: 2000; font-size: 1rem;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.8s;
+            white-space: nowrap;
+        }
+
+        @keyframes toastIn  { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+        .confetti-p {
+            position: fixed; pointer-events: none; z-index: 9999;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="container header-content">
+        <a href="../dashboard.html" class="logo">
+            <i class="fas fa-rocket"></i><span>عالم التعلم</span>
+        </a>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <button class="sound-toggle-btn" onclick="toggleSound()" id="soundBtn"
+                style="background:#FF7A00; color:white; border:none; padding:10px 20px;
+                       border-radius:50px; cursor:pointer; font-family:'Cairo',sans-serif;
+                       font-size:0.9rem; font-weight:700; display:flex; align-items:center; gap:6px;">
+                <i class="fas fa-volume-up"></i> صوت
+            </button>
+            <a href="../dashboard.html" class="back-btn">
+                <i class="fas fa-arrow-right"></i><span>العودة</span>
+            </a>
+        </div>
+    </div>
+</header>
+
+<div class="page-hero">
+    <span class="hero-icon">🃏</span>
+    <h1>لعبة الذاكرة</h1>
+    <p>اكتشفي الأزواج المتشابهة!</p>
+</div>
+
+<main class="container">
+
+    <!-- نقاطي -->
+    <div class="stars-bar">
+        <i class="fas fa-trophy"></i>
+        <span>نقاطي: <strong id="totalScore">0</strong> 🏆</span>
+    </div>
+
+    <!-- اختيار المستوى -->
+    <div id="levelSelect">
+        <div class="activity-section">
+            <h2 style="margin-bottom:20px; font-size:1.2rem; text-align:center;">
+                🎯 اختاري مستوى الصعوبة
+            </h2>
+            <div class="levels-grid">
+                <div class="level-card easy" onclick="startGame('easy')">
+                    <span class="level-icon">🟢</span>
+                    <div class="level-name">سهل</div>
+                    <div class="level-desc">4 أزواج — بدون وقت</div>
+                </div>
+                <div class="level-card medium" onclick="startGame('medium')">
+                    <span class="level-icon">🔵</span>
+                    <div class="level-name">متوسط</div>
+                    <div class="level-desc">8 أزواج — بدون وقت</div>
+                </div>
+                <div class="level-card hard" onclick="startGame('hard')">
+                    <span class="level-icon">🟠</span>
+                    <div class="level-name">صعب</div>
+                    <div class="level-desc">12 زوج — بدون وقت</div>
+                </div>
+                <div class="level-card expert" onclick="startGame('expert')">
+                    <span class="level-icon">🔴</span>
+                    <div class="level-name">خبير</div>
+                    <div class="level-desc">16 زوج — 90 ثانية</div>
+                </div>
+                <div class="level-card pro" onclick="startGame('pro')">
+                    <span class="level-icon">🟣</span>
+                    <div class="level-name">محترف</div>
+                    <div class="level-desc">20 زوج — 120 ثانية</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- منطقة اللعب -->
+    <div id="gameArea">
+        <div class="score-bar">
+            <span id="levelLabel">🟢 سهل</span>
+            <span class="score-pill">نقاط: <span id="gameScore">0</span> ⭐</span>
+        </div>
+
+        <div class="game-topbar">
+            <div class="game-stats">
+                <div class="stat-pill">
+                    <i class="fas fa-redo" style="color:#0984E3;"></i>
+                    المحاولات: <strong id="attempts">0</strong>
+                </div>
+                <div class="stat-pill">
+                    <i class="fas fa-check" style="color:#00b894;"></i>
+                    الأزواج: <strong id="matchedPairs">0</strong>/<span id="totalPairs">0</span>
+                </div>
+                <div class="timer-pill" id="timerPill">
+                    <i class="fas fa-clock"></i>
+                    <span id="timerValue">90</span>ث
+                </div>
+            </div>
+            <button class="btn-change-level" onclick="backToLevels()">
+                <i class="fas fa-th-large"></i> تغيير المستوى
+            </button>
+        </div>
+
+        <div class="memory-grid" id="memoryGrid"></div>
+
+        <div style="text-align:center;">
+            <button class="btn-primary" onclick="restartGame()" style="display:none;" id="restartBtn">
+                <i class="fas fa-sync"></i> العب مجدداً بنفس المستوى
+            </button>
+        </div>
+    </div>
+
+</main>
+
+<footer class="page-footer"><p>صنع بحب ❤️ لتعليم أطفالنا</p></footer>
+
+<script src="../api.js"></script>
+<script>
+// === إعدادات المستويات ===
+const LEVELS = {
+    easy:   { pairs: 4,  cols: 4,  time: null, points: 5,  label: '🟢 سهل' },
+    medium: { pairs: 8,  cols: 4,  time: null, points: 10, label: '🔵 متوسط' },
+    hard:   { pairs: 12, cols: 6,  time: null, points: 15, label: '🟠 صعب' },
+    expert: { pairs: 16, cols: 8,  time: 90,  points: 25, label: '🔴 خبير' },
+    pro:    { pairs: 20, cols: 10, time: 120, points: 40, label: '🟣 محترف' },
+};
+
+const EMOJIS = ['🍎','🐱','🌸','🦋','⭐','🎈','🌈','🏆','🎨','🚀','🦁','🐸','🌙','🍕','🎵','🌺','🐧','🦄','🍦','🎭'];
+
+let currentLevel = null;
+let flippedCards = [], matchedCount = 0, attempts = 0, canFlip = true;
+let timerInterval = null, timeLeft = 0;
+let totalScore = parseInt(localStorage.getItem('memoryScore') || '0');
+let gameScore = 0;
+let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+let audioCtx = null;
+
+// === صوت ===
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, dur, type = 'sine', vol = 0.1) {
+    if (!soundEnabled) return;
+    initAudio();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.frequency.value = freq; o.type = type;
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+    o.start(audioCtx.currentTime); o.stop(audioCtx.currentTime + dur);
+}
+
+const SFX = {
+    flip:  () => playTone(400, 0.1, 'square', 0.05),
+    match: () => { playTone(523, 0.15); setTimeout(() => playTone(659, 0.15), 100); setTimeout(() => playTone(784, 0.2), 200); },
+    error: () => { playTone(200, 0.2, 'sawtooth', 0.08); setTimeout(() => playTone(150, 0.2, 'sawtooth', 0.08), 100); },
+    win:   () => { [400,500,600,800,1000].forEach((f,i) => setTimeout(() => playTone(f, 0.15, 'sine', 0.12), i*100)); },
+    tick:  () => playTone(800, 0.03, 'sine', 0.02),
+};
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    localStorage.setItem('soundEnabled', soundEnabled);
+    document.getElementById('soundBtn').innerHTML = soundEnabled
+        ? '<i class="fas fa-volume-up"></i> صوت'
+        : '<i class="fas fa-volume-mute"></i> صامت';
+    if (soundEnabled) initAudio();
+}
+
+// === بدء اللعبة ===
+function startGame(level) {
+    currentLevel = level;
+    gameScore = 0;
+    document.getElementById('gameScore').textContent = 0;
+    document.getElementById('levelSelect').style.display = 'none';
+    document.getElementById('gameArea').style.display = 'block';
+    document.getElementById('restartBtn').style.display = 'none';
+    document.getElementById('levelLabel').textContent = LEVELS[level].label;
+    buildGrid(level);
+}
+
+function restartGame() {
+    startGame(currentLevel);
+}
+
+function backToLevels() {
+    if (timerInterval) clearInterval(timerInterval);
+    document.getElementById('gameArea').style.display = 'none';
+    document.getElementById('levelSelect').style.display = 'block';
+}
+
+// === بناء الشبكة ===
+function buildGrid(level) {
+    const cfg = LEVELS[level];
+    const pairs = EMOJIS.slice(0, cfg.pairs);
+    const cards = [...pairs, ...pairs].sort(() => Math.random() - 0.5);
+
+    flippedCards = []; matchedCount = 0; attempts = 0; canFlip = true;
+    document.getElementById('matchedPairs').textContent = 0;
+    document.getElementById('attempts').textContent = 0;
+    document.getElementById('totalPairs').textContent = cfg.pairs;
+
+    const grid = document.getElementById('memoryGrid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${cfg.cols}, 1fr)`;
+
+    // حجم الإيموجي حسب عدد الأعمدة
+    const fs = cfg.cols >= 10 ? '1.2rem' : cfg.cols >= 8 ? '1.5rem' : cfg.cols >= 6 ? '1.8rem' : '2.2rem';
+
+    cards.forEach(emoji => {
+        const card = document.createElement('div');
+        card.className = 'memory-card';
+        card.dataset.emoji = emoji;
+        card.innerHTML = `
+            <div class="card-back"><i class="fas fa-question" style="font-size:1.4rem;"></i></div>
+            <div class="card-front" style="font-size:${fs}">${emoji}</div>
+        `;
+        card.onclick = () => flipCard(card);
+        grid.appendChild(card);
+    });
+
+    // مؤقت
+    const timerPill = document.getElementById('timerPill');
+    if (timerInterval) clearInterval(timerInterval);
+    if (cfg.time) {
+        timeLeft = cfg.time;
+        document.getElementById('timerValue').textContent = timeLeft;
+        timerPill.classList.add('active');
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timerValue').textContent = timeLeft;
+            if (timeLeft <= 10) SFX.tick();
+            if (timeLeft <= 0) { clearInterval(timerInterval); gameOver(); }
+        }, 1000);
+    } else {
+        timerPill.classList.remove('active');
+    }
+}
+
+// === منطق اللعبة ===
+function flipCard(card) {
+    if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+    card.classList.add('flipped');
+    flippedCards.push(card);
+    SFX.flip();
+
+    if (flippedCards.length === 2) {
+        attempts++;
+        document.getElementById('attempts').textContent = attempts;
+        canFlip = false;
+        setTimeout(checkMatch, 800);
+    }
+}
+
+function checkMatch() {
+    const [a, b] = flippedCards;
+    if (a.dataset.emoji === b.dataset.emoji) {
+        a.classList.add('matched'); b.classList.add('matched');
+        matchedCount++;
+        document.getElementById('matchedPairs').textContent = matchedCount;
+        SFX.match();
+
+        const pts = LEVELS[currentLevel].points;
+        addScore(pts);
+
+        if (matchedCount === LEVELS[currentLevel].pairs) {
+            if (timerInterval) clearInterval(timerInterval);
+            const bonus = currentLevel === 'pro' ? 100 : currentLevel === 'expert' ? 75 : 50;
+            addScore(bonus);
+            showToast(`🎉 أكملتِ المستوى في ${attempts} محاولة! +${bonus} مكافأة!`);
+            SFX.win();
+            spawnConfetti();
+            document.getElementById('restartBtn').style.display = 'inline-flex';
+        }
+    } else {
+        SFX.error();
+        a.classList.remove('flipped');
+        b.classList.remove('flipped');
+    }
+    flippedCards = []; canFlip = true;
+}
+
+function gameOver() {
+    showToast('⏰ انتهى الوقت! حاولي مرة أخرى 💪');
+    SFX.error();
+    document.querySelectorAll('.memory-card').forEach(c => c.style.pointerEvents = 'none');
+    document.getElementById('restartBtn').style.display = 'inline-flex';
+}
+
+// === النقاط ===
+function addScore(n) {
+    gameScore += n;
+    totalScore += n;
+    document.getElementById('gameScore').textContent = gameScore;
+    document.getElementById('totalScore').textContent = totalScore;
+    localStorage.setItem('memoryScore', totalScore);
+
+    const stars = Math.floor(n / 5);
+    if (stars > 0) {
+        if (typeof syncActivityToAPI === 'function') {
+            syncActivityToAPI('games', stars, n, 5, { gameType: 'memory', level: currentLevel });
+        }
+        try {
+            const s = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+            if (s?.type === 'child') {
+                const acc = JSON.parse(localStorage.getItem('kidsAppAccounts') || 'null');
+                if (acc) {
+                    const idx = acc.children?.findIndex?.(c => String(c.id) === String(s.id));
+                    if (idx !== -1 && idx !== undefined) {
+                        acc.children[idx].stars = (acc.children[idx].stars || 0) + stars;
+                        localStorage.setItem('kidsAppAccounts', JSON.stringify(acc));
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+// === مؤثرات ===
+function showToast(msg) {
+    document.querySelector('.toast')?.remove();
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+}
+
+function spawnConfetti() {
+    for (let i = 0; i < 40; i++) setTimeout(() => {
+        const c = document.createElement('div');
+        c.className = 'confetti-p';
+        c.style.cssText = `left:${Math.random()*100}vw;top:-10px;width:${6+Math.random()*8}px;height:${10+Math.random()*12}px;background:hsl(${Math.random()*360},70%,60%);animation-duration:${2+Math.random()*2}s;border-radius:2px;`;
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 4000);
+    }, i * 50);
+}
+
+// === تهيئة ===
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        const s = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+        if (!s || s.type !== 'child') location.href = '../login.html';
+    } catch(e) {}
+
+    document.getElementById('totalScore').textContent = totalScore;
+    if (!soundEnabled) {
+        document.getElementById('soundBtn').innerHTML = '<i class="fas fa-volume-mute"></i> صامت';
+    }
+    document.addEventListener('click', initAudio, { once: true });
+});
+</script>
+</body>
+</html>

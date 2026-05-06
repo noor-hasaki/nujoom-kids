@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خمّني! - نجوم التعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="activity-shared.css">
+    <style>
+        :root { --hero-start: #00CEC9; --hero-end: #0984E3; }
+
+        /* === اختيار المستوى === */
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .level-card {
+            background: white;
+            border-radius: 22px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .level-card:hover { transform: translateY(-6px); box-shadow: 0 14px 32px rgba(0,0,0,0.15); }
+        .level-card.easy   { border-color: #00b894; }
+        .level-card.medium { border-color: #0984E3; }
+        .level-card.hard   { border-color: #e67e22; }
+        .level-card.expert { border-color: #e74c3c; }
+        .level-card.pro    { border-color: #8e44ad; }
+
+        .level-card:hover.easy   { background: #f0fff8; }
+        .level-card:hover.medium { background: #f0f6ff; }
+        .level-card:hover.hard   { background: #fff8f0; }
+        .level-card:hover.expert { background: #fff0f0; }
+        .level-card:hover.pro    { background: #f8f0ff; }
+
+        .level-icon { font-size: 2.8rem; display: block; margin-bottom: 10px; }
+        .level-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+        .level-desc { font-size: 0.82rem; color: var(--text-light); }
+
+        /* === منطقة اللعب === */
+        #gameArea { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .score-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #00CEC9, #0984E3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+            font-weight: 800;
+        }
+
+        .score-pill {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+        }
+
+        .game-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .stat-pill {
+            background: var(--bg-light);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timer-pill {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 700;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timer-pill.active { display: flex; }
+
+        .btn-change-level {
+            background: linear-gradient(135deg, #00CEC9, #0984E3);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .btn-change-level:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,206,201,0.35); }
+
+        /* === السؤال === */
+        .question-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 24px;
+            padding: 32px 24px;
+            text-align: center;
+            color: white;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+        }
+
+        .question-emoji {
+            font-size: 5rem;
+            display: block;
+            margin: 10px 0;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .question-hint {
+            font-size: 1.05rem;
+            opacity: 0.9;
+            min-height: 28px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        /* === الأجوبة === */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            max-width: 460px;
+            margin: 0 auto 20px;
+        }
+
+        .option-btn {
+            padding: 18px 14px;
+            border-radius: 18px;
+            border: 3px solid #e0e0e0;
+            background: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #00CEC9;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,206,201,0.2);
+        }
+
+        .option-btn.correct { background: #d4edda; border-color: #28a745; color: #155724; }
+        .option-btn.wrong   { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+
+        /* === streak === */
+        .streak-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .streak-flame { font-size: 1.4rem; }
+
+        /* === toast & confetti === */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--primary-color); color: white;
+            padding: 12px 28px; border-radius: 50px;
+            font-weight: 700; z-index: 2000; font-size: 1rem;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.8s;
+            white-space: nowrap;
+        }
+
+        @keyframes toastIn  { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+        .confetti-p {
+            position: fixed; pointer-events: none; z-index: 9999;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="container header-content">
+        <a href="../dashboard.html" class="logo">
+            <i class="fas fa-rocket"></i><span>عالم التعلم</span>
+        </a>
+        <a href="../dashboard.html" class="back-btn">
+            <i class="fas fa-arrow-right"></i><span>العودة</span>
+        </a>
+    </div>
+</header>
+
+<div class="page-hero">
+    <span class="hero-icon">🔍</span>
+    <h1>خمّني!</h1>
+    <p>خمّني من الصورة الإيموجي!</p>
+</div>
+
+<main class="container">
+
+    <!-- نقاطي -->
+    <div class="stars-bar">
+        <i class="fas fa-trophy"></i>
+        <span>نقاطي: <strong id="totalScore">0</strong> 🏆</span>
+    </div>
+
+    <!-- اختيار المستوى -->
+    <div id="levelSelect">
+        <div class="activity-section">
+            <h2 style="margin-bottom:20px; font-size:1.2rem; text-align:center;">
+                🎯 اختاري مستوى الصعوبة
+            </h2>
+            <div class="levels-grid">
+                <div class="level-card easy" onclick="startGame('easy')">
+                    <span class="level-icon">🟢</span>
+                    <div class="level-name">سهل</div>
+                    <div class="level-desc">خيارَين + تلميح كامل</div>
+                </div>
+                <div class="level-card medium" onclick="startGame('medium')">
+                    <span class="level-icon">🔵</span>
+                    <div class="level-name">متوسط</div>
+                    <div class="level-desc">3 خيارات + أول حرف</div>
+                </div>
+                <div class="level-card hard" onclick="startGame('hard')">
+                    <span class="level-icon">🟠</span>
+                    <div class="level-name">صعب</div>
+                    <div class="level-desc">4 خيارات — بدون تلميح</div>
+                </div>
+                <div class="level-card expert" onclick="startGame('expert')">
+                    <span class="level-icon">🔴</span>
+                    <div class="level-name">خبير</div>
+                    <div class="level-desc">5 خيارات + 20 ثانية</div>
+                </div>
+                <div class="level-card pro" onclick="startGame('pro')">
+                    <span class="level-icon">🟣</span>
+                    <div class="level-name">محترف</div>
+                    <div class="level-desc">6 خيارات + 15 ثانية</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- منطقة اللعب -->
+    <div id="gameArea">
+        <div class="score-bar">
+            <span id="levelLabel">🟢 سهل</span>
+            <span class="score-pill">نقاط: <span id="gameScore">0</span> ⭐</span>
+        </div>
+
+        <div class="game-topbar">
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div class="stat-pill">
+                    <i class="fas fa-star" style="color:#FFD700;"></i>
+                    الإجابات: <strong id="correctCount">0</strong>
+                </div>
+                <div class="timer-pill" id="timerPill">
+                    <i class="fas fa-clock"></i>
+                    <span id="timerValue">20</span>ث
+                </div>
+            </div>
+            <button class="btn-change-level" onclick="backToLevels()">
+                <i class="fas fa-th-large"></i> تغيير المستوى
+            </button>
+        </div>
+
+        <!-- streak -->
+        <div class="streak-bar" id="streakBar" style="display:none;">
+            <span class="streak-flame">🔥</span>
+            <span id="streakText">سلسلة: 0</span>
+        </div>
+
+        <!-- السؤال -->
+        <div class="question-card">
+            <div class="question-hint" id="questionHint">ما هذا؟</div>
+            <span class="question-emoji" id="questionEmoji">🍎</span>
+        </div>
+
+        <!-- الأجوبة -->
+        <div class="options-grid" id="optionsGrid"></div>
+    </div>
+
+</main>
+
+<footer class="page-footer"><p>صنع بحب ❤️ لتعليم أطفالنا</p></footer>
+
+<script src="../api.js"></script>
+<script>
+// === بيانات الأسئلة ===
+const QUESTIONS = [
+    { emoji: '🍎', answer: 'تفاحة',   options: ['تفاحة','موزة','برتقال','عنب','كمثرى','بطيخ'],       hint: 'فاكهة حمراء تُؤكل' },
+    { emoji: '🦁', answer: 'أسد',     options: ['نمر','أسد','فيل','زرافة','دب','ذئب'],               hint: 'ملك الغابة' },
+    { emoji: '🚀', answer: 'صاروخ',   options: ['طائرة','قطار','صاروخ','سيارة','دراجة','سفينة'],     hint: 'يسافر للفضاء' },
+    { emoji: '🌈', answer: 'قوس قزح', options: ['شمس','قمر','قوس قزح','نجمة','سحابة','مطر'],         hint: 'يظهر بعد المطر' },
+    { emoji: '🐧', answer: 'بطريق',   options: ['دجاجة','بطريق','بطة','حمامة','نسر','بومة'],         hint: 'يعيش في القطب' },
+    { emoji: '🎸', answer: 'جيتار',   options: ['بيانو','طبل','جيتار','كمان','ناي','عود'],            hint: 'آلة موسيقية ذات أوتار' },
+    { emoji: '🌺', answer: 'زهرة',    options: ['شجرة','عشب','زهرة','نبتة','صبار','فطر'],             hint: 'لها رائحة عطرة' },
+    { emoji: '⭐', answer: 'نجمة',    options: ['قمر','نجمة','شمس','كوكب','مذنب','كويكب'],            hint: 'تلمع في السماء ليلاً' },
+    { emoji: '🐘', answer: 'فيل',     options: ['أسد','فيل','زرافة','نمر','حصان','جمل'],              hint: 'له خرطوم طويل' },
+    { emoji: '🦋', answer: 'فراشة',   options: ['نحلة','فراشة','عصفور','خنفساء','بعوضة','يعسوب'],    hint: 'لها أجنحة ملونة' },
+    { emoji: '🍕', answer: 'بيتزا',   options: ['برغر','بيتزا','هوت دوج','سندويشة','لفة','فطيرة'],   hint: 'أكلة إيطالية مشهورة' },
+    { emoji: '🌙', answer: 'قمر',     options: ['شمس','قمر','نجمة','كوكب','مذنب','كويكب'],            hint: 'يضيء الليل' },
+    { emoji: '🎵', answer: 'موسيقى',  options: ['رسم','موسيقى','كتابة','قراءة','رياضة','طبخ'],        hint: 'صوت جميل منظم' },
+    { emoji: '🦊', answer: 'ثعلب',    options: ['ذئب','ثعلب','كلب','قط','أرنب','دب'],                hint: 'حيوان ذكي أحمر اللون' },
+    { emoji: '🍦', answer: 'آيس كريم',options: ['كعك','آيس كريم','حلوى','شوكولاتة','تارت','كاب كيك'],hint: 'حلوى باردة ولذيذة' },
+];
+
+// === إعدادات المستويات ===
+const LEVELS = {
+    easy:   { options: 2, hint: 'full',    time: null, points: 3,  label: '🟢 سهل' },
+    medium: { options: 3, hint: 'partial', time: null, points: 5,  label: '🔵 متوسط' },
+    hard:   { options: 4, hint: false,     time: null, points: 8,  label: '🟠 صعب' },
+    expert: { options: 5, hint: false,     time: 20,   points: 12, label: '🔴 خبير' },
+    pro:    { options: 6, hint: false,     time: 15,   points: 20, label: '🟣 محترف' },
+};
+
+let currentLevel = null;
+let currentQ = null;
+let canAnswer = true;
+let timerInterval = null;
+let streak = 0;
+let correctCount = 0;
+let gameScore = 0;
+let totalScore = parseInt(localStorage.getItem('guessScore') || '0');
+let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+let audioCtx = null;
+
+// === صوت ===
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, dur, type = 'sine', vol = 0.1) {
+    if (!soundEnabled) return;
+    initAudio();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.frequency.value = freq; o.type = type;
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+    o.start(audioCtx.currentTime); o.stop(audioCtx.currentTime + dur);
+}
+
+const SFX = {
+    correct: () => { playTone(600, 0.1); setTimeout(() => playTone(800, 0.15), 80); setTimeout(() => playTone(1000, 0.2), 160); },
+    wrong:   () => { playTone(200, 0.2, 'sawtooth', 0.08); },
+    tick:    () => playTone(800, 0.03, 'sine', 0.02),
+};
+
+// === بدء اللعبة ===
+function startGame(level) {
+    currentLevel = level;
+    gameScore = 0;
+    correctCount = 0;
+    streak = 0;
+    document.getElementById('gameScore').textContent = 0;
+    document.getElementById('correctCount').textContent = 0;
+    document.getElementById('levelLabel').textContent = LEVELS[level].label;
+    document.getElementById('levelSelect').style.display = 'none';
+    document.getElementById('gameArea').style.display = 'block';
+    document.getElementById('streakBar').style.display = 'none';
+    nextQuestion();
+}
+
+function backToLevels() {
+    if (timerInterval) clearInterval(timerInterval);
+    document.getElementById('gameArea').style.display = 'none';
+    document.getElementById('levelSelect').style.display = 'block';
+}
+
+// === سؤال جديد ===
+function nextQuestion() {
+    if (timerInterval) clearInterval(timerInterval);
+    canAnswer = true;
+    currentQ = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+    const cfg = LEVELS[currentLevel];
+
+    document.getElementById('questionEmoji').textContent = currentQ.emoji;
+
+    // التلميح
+    const hintEl = document.getElementById('questionHint');
+    if (cfg.hint === 'full')    hintEl.textContent = `💡 تلميح: ${currentQ.hint}`;
+    else if (cfg.hint === 'partial') hintEl.textContent = `💡 أول حرف: ${currentQ.answer.charAt(0)}`;
+    else hintEl.textContent = 'ما هذا؟ اختاري الإجابة الصحيحة!';
+
+    // الخيارات — تضمين الإجابة الصحيحة دائماً
+    const wrongPool = currentQ.options.filter(o => o !== currentQ.answer);
+    const selected = wrongPool.sort(() => Math.random() - 0.5).slice(0, cfg.options - 1);
+    const opts = [currentQ.answer, ...selected].sort(() => Math.random() - 0.5);
+
+    const grid = document.getElementById('optionsGrid');
+    grid.innerHTML = '';
+    opts.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, btn);
+        grid.appendChild(btn);
+    });
+
+    // المؤقت
+    const timerPill = document.getElementById('timerPill');
+    if (cfg.time) {
+        let t = cfg.time;
+        document.getElementById('timerValue').textContent = t;
+        timerPill.classList.add('active');
+        timerInterval = setInterval(() => {
+            t--;
+            document.getElementById('timerValue').textContent = t;
+            if (t <= 5) SFX.tick();
+            if (t <= 0) { clearInterval(timerInterval); timeOut(); }
+        }, 1000);
+    } else {
+        timerPill.classList.remove('active');
+    }
+}
+
+// === التحقق من الإجابة ===
+function checkAnswer(selected, btn) {
+    if (!canAnswer) return;
+    canAnswer = false;
+    if (timerInterval) clearInterval(timerInterval);
+
+    try {
+        if (selected === currentQ.answer) {
+            btn.classList.add('correct');
+            try { SFX.correct(); } catch(e) {}
+            streak++;
+            correctCount++;
+            document.getElementById('correctCount').textContent = correctCount;
+
+            // نقاط إضافية عند السلسلة
+            const bonus = streak >= 3 ? 1 : 0;
+            const pts = LEVELS[currentLevel].points + bonus;
+            addScore(pts);
+
+            let msg = `✅ صحيح! +${pts} نقاط`;
+            if (streak >= 3) msg += ` 🔥 سلسلة ${streak}!`;
+            showToast(msg);
+
+            if (streak >= 3) {
+                document.getElementById('streakBar').style.display = 'flex';
+                document.getElementById('streakText').textContent = `سلسلة: ${streak}`;
+                spawnConfetti();
+            }
+        } else {
+            btn.classList.add('wrong');
+            try { SFX.wrong(); } catch(e) {}
+            streak = 0;
+            document.getElementById('streakBar').style.display = 'none';
+            // إظهار الإجابة الصحيحة
+            document.querySelectorAll('.option-btn').forEach(b => {
+                if (b.textContent === currentQ.answer) b.classList.add('correct');
+            });
+            showToast('❌ الإجابة: ' + currentQ.answer);
+        }
+    } finally {
+        setTimeout(nextQuestion, 2000);
+    }
+}
+
+function timeOut() {
+    if (!canAnswer) return;
+    canAnswer = false;
+    streak = 0;
+    document.getElementById('streakBar').style.display = 'none';
+    document.querySelectorAll('.option-btn').forEach(b => {
+        if (b.textContent === currentQ.answer) b.classList.add('correct');
+        b.disabled = true;
+    });
+    showToast('⏰ انتهى الوقت! الإجابة: ' + currentQ.answer);
+    setTimeout(nextQuestion, 2000);
+}
+
+// === النقاط ===
+function addScore(n) {
+    gameScore += n;
+    totalScore += n;
+    document.getElementById('gameScore').textContent = gameScore;
+    document.getElementById('totalScore').textContent = totalScore;
+    localStorage.setItem('guessScore', totalScore);
+
+    const stars = Math.max(1, Math.floor(n / 5));
+    if (stars > 0) {
+        if (typeof syncActivityToAPI === 'function') {
+            syncActivityToAPI('games', stars, n, 5, { gameType: 'guess', level: currentLevel });
+        }
+        try {
+            const s = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+            if (s?.type === 'child') {
+                const acc = JSON.parse(localStorage.getItem('kidsAppAccounts') || 'null');
+                if (acc) {
+                    const idx = acc.children?.findIndex?.(c => String(c.id) === String(s.id));
+                    if (idx !== -1 && idx !== undefined) {
+                        acc.children[idx].stars = (acc.children[idx].stars || 0) + stars;
+                        localStorage.setItem('kidsAppAccounts', JSON.stringify(acc));
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+}
+
+// === مؤثرات ===
+function showToast(msg) {
+    document.querySelector('.toast')?.remove();
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+}
+
+function spawnConfetti() {
+    for (let i = 0; i < 24; i++) setTimeout(() => {
+        const c = document.createElement('div');
+        c.className = 'confetti-p';
+        c.style.cssText = `left:${Math.random()*100}vw;top:-10px;width:${6+Math.random()*8}px;height:${10+Math.random()*12}px;background:hsl(${Math.random()*360},70%,60%);animation-duration:${2+Math.random()*2}s;border-radius:2px;`;
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 4000);
+    }, i * 60);
+}
+
+// === تهيئة ===
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        const s = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+        if (!s || s.type !== 'child') location.href = '../login.html';
+    } catch(e) {}
+    document.getElementById('totalScore').textContent = totalScore;
+    document.addEventListener('click', initAudio, { once: true });
+});
+</script>
+</body>
+</html>

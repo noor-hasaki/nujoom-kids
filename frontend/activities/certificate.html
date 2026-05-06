@@ -1,0 +1,154 @@
+// استبدل دالة showCertificateInline بهذه النسخة المعدلة:
+
+function showCertificateInline(certId) {
+  const cert = CERTIFICATES.find(c => c.id === certId);
+  if (!cert || !levelState.certificates[certId]) {
+    toast('🔒 هذه الشهادة غير متاحة بعد!');
+    return;
+  }
+  
+  const existing = document.getElementById('certOverlay');
+  if (existing) existing.remove();
+  
+  const certOverlay = document.createElement('div');
+  certOverlay.id = 'certOverlay';
+  certOverlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(13, 0, 34, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    animation: pp .3s ease;
+    overflow: auto;
+  `;
+  
+  const date = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+  const certNumber = 'CERT-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+  
+  certOverlay.innerHTML = `
+    <div style="
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      background: linear-gradient(135deg, #1e3c72, #2a5298, #7e8ba3);
+      border-radius: 15px;
+      padding: 3px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    ">
+      <button onclick="closeCertificate()" style="
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: #ff4757;
+        color: white;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 100;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      ">✕</button>
+      
+      <div style="
+        background: #faf8f3;
+        border-radius: 150px 150px 15px 15px;
+        padding: 40px 35px 30px;
+        position: relative;
+        min-height: 600px;
+      ">
+        <!-- Decorative Stars -->
+        <div style="position: absolute; top: 20px; left: 15%; font-size: 25px; color: #FFD700;">⭐</div>
+        <div style="position: absolute; top: 35px; left: 10%; font-size: 18px; color: #FFD700;">✨</div>
+        <div style="position: absolute; top: 50px; right: 20%; font-size: 16px; color: #FFD700;">⭐</div>
+        <div style="position: absolute; bottom: 120px; left: 5%; font-size: 40px; color: #FFD700;">✨</div>
+        
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 15px;">
+            <div style="width: 45px; height: 45px; background: linear-gradient(135deg, #1e3c72, #2a5298); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">⭐</div>
+            <div style="text-align: right;">
+              <div style="font-family: 'Amiri', serif; font-size: 18px; font-weight: 700; color: #1e3c72; margin-bottom: 2px;">منصة نجوم التعلم</div>
+              <div style="font-size: 10px; color: #666; font-weight: 600;">Learning Stars Platform</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Title -->
+        <div style="margin: 25px 0; text-align: center;">
+          <div style="font-family: 'Baloo Bhaijaan 2', cursive; font-size: 42px; font-weight: 900; color: #2a5298; line-height: 1.1; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            CERTIFICATE OF
+            <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #2a5298, #1e3c72); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; position: relative;">⭐</div>
+            PARTICIPATION
+          </div>
+        </div>
+        
+        <!-- Content -->
+        <div style="text-align: center; margin: 25px 0; padding: 0 30px;">
+          <div style="font-size: 13px; color: #555; line-height: 1.8; margin-bottom: 15px;">
+            This is to certify that Mr./Mrs.<br>
+            <div style="font-family: 'Amiri', serif; font-size: 28px; font-weight: 700; color: #1e3c72; margin: 15px 0; padding: 10px 20px; border-bottom: 2px solid #2a5298; display: inline-block;">${child.name}</div><br>
+            has successfully completed the course in
+          </div>
+          
+          <div style="font-size: 13px; color: #555; line-height: 1.8; margin: 15px 0;">
+            <span style="font-weight: 700; color: #1e3c72;">${cert.name}</span><br>
+            conducted by the Learning Stars Platform<br>
+            and has secured <strong>FIRST CLASS</strong>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; padding-top: 25px; border-top: 2px dashed #ddd;">
+          <div style="text-align: center; flex: 1;">
+            <div style="font-family: 'Amiri', serif; font-size: 24px; color: #1e3c72; margin-bottom: 5px;">✍️</div>
+            <div style="border-top: 2px solid #1e3c72; width: 160px; margin: 0 auto 5px; padding-top: 3px; font-size: 11px; font-weight: 600;">Assistant Director</div>
+          </div>
+          
+          <div style="text-align: center; flex: 1;">
+            <div style="width: 70px; height: 70px; border: 3px solid #2a5298; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: rgba(42, 82, 152, 0.05);">
+              <div style="width: 55px; height: 55px; border: 2px dashed #2a5298; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">⭐</div>
+            </div>
+          </div>
+          
+          <div style="text-align: left; flex: 1; font-size: 10px; color: #666; line-height: 1.8;">
+            <div style="margin-bottom: 3px;"><strong style="color: #1e3c72;">Reg. No.:</strong> ${certNumber}</div>
+            <div style="margin-bottom: 3px;"><strong style="color: #1e3c72;">Date:</strong> ${date}</div>
+            <div><strong style="color: #1e3c72;">Cert. No.:</strong> ${'CW' + Math.random().toString(36).substr(2, 6).toUpperCase()}</div>
+          </div>
+        </div>
+        
+        <!-- Platform Footer -->
+        <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 2px dashed #ddd; font-family: 'Baloo Bhaijaan 2', cursive; font-size: 15px; font-weight: 700; color: #2a5298;">
+          ⭐ نجوم التعلم - منصة تعليمية متكاملة للأطفال ⭐
+        </div>
+      </div>
+      
+      <button onclick="printCertificate()" style="
+        position: absolute;
+        bottom: -60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: #1a1a2e;
+        border: none;
+        border-radius: 50px;
+        padding: 12px 35px;
+        font-family: 'Baloo Bhaijaan 2', cursive;
+        font-size: 16px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        white-space: nowrap;
+        z-index: 100;
+      ">🖨️ طباعة الشهادة</button>
+    </div>
+  `;
+  
+  document.body.appendChild(certOverlay);
+  confetti();
+}

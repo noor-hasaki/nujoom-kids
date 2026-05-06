@@ -1,0 +1,211 @@
+/* activity-shared.css - أنماط مشتركة لصفحات الأنشطة */
+:root {
+    --primary-color: #6C5CE7;
+    --secondary-color: #00CEC9;
+    --accent-orange: #FFA502;
+    --accent-pink: #FF7675;
+    --accent-green: #00B894;
+    --accent-blue: #0984E3;
+    --accent-purple: #A29BFE;
+    --text-dark: #2D3436;
+    --text-light: #636E72;
+    --white: #FFFFFF;
+    --bg-light: #F8F9FA;
+    --card-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--bg-light);
+    min-height: 100vh;
+    color: var(--text-dark);
+    direction: rtl;
+}
+
+.container { width: 90%; max-width: 1100px; margin: 0 auto; }
+
+/* ========== Header ========== */
+.top-bar {
+    background: var(--white);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    position: sticky; top: 0; z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.4rem; font-weight: 700;
+    color: var(--primary-color); text-decoration: none;
+}
+
+.logo i { font-size: 1.8rem; }
+
+.back-btn {
+    background: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 10px 22px;
+    border-radius: 50px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.95rem; font-weight: 600;
+    transition: var(--transition);
+    text-decoration: none;
+}
+
+.back-btn:hover {
+    background: #5a4bd1;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108,92,231,0.4);
+}
+
+/* ========== Page Hero ========== */
+.page-hero {
+    text-align: center;
+    padding: 45px 20px 30px;
+    background: linear-gradient(135deg, var(--hero-start, #6C5CE7) 0%, var(--hero-end, #A29BFE) 100%);
+    color: var(--white);
+    margin-bottom: 30px;
+    border-radius: 0 0 30px 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.page-hero .hero-icon {
+    font-size: 4rem;
+    margin-bottom: 12px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+}
+
+.page-hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+.page-hero p { font-size: 1.05rem; opacity: 0.9; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ========== Stars Bar ========== */
+.stars-bar {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--white);
+    padding: 12px 25px;
+    border-radius: 50px;
+    box-shadow: var(--card-shadow);
+    width: fit-content;
+    margin: 0 auto 30px;
+    font-weight: 600;
+}
+
+.stars-bar i { color: #FFD700; font-size: 1.3rem; }
+
+/* ========== Activity Card ========== */
+.activity-section {
+    background: var(--white);
+    border-radius: 25px;
+    padding: 30px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 30px;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== Shared Buttons ========== */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-purple));
+    color: var(--white); border: none;
+    padding: 13px 30px; border-radius: 50px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: var(--transition);
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 5px 15px rgba(108,92,231,0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(108,92,231,0.55);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--accent-green), #38EF7D);
+    color: var(--white); border: none;
+    padding: 13px 30px; border-radius: 50px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: var(--transition);
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 5px 15px rgba(0,184,148,0.4);
+}
+
+.btn-success:hover { transform: translateY(-3px); }
+
+/* ========== Footer ========== */
+.page-footer {
+    text-align: center; padding: 25px;
+    color: var(--text-light); font-size: 0.9rem;
+    border-top: 2px solid #eee; margin-top: 40px;
+}
+
+/* ========== Confetti ========== */
+.confetti-piece {
+    position: fixed; width: 10px; height: 10px;
+    border-radius: 2px;
+    animation: confettiFall 3s linear forwards;
+    pointer-events: none; z-index: 9999;
+}
+
+@keyframes confettiFall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* ========== Toast ========== */
+.toast {
+    position: fixed; bottom: 25px; left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-purple));
+    color: var(--white); padding: 14px 28px;
+    border-radius: 50px; font-weight: 700;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    z-index: 9998; font-size: 1rem;
+    animation: toastIn 0.3s ease, toastOut 0.4s ease 2.6s forwards;
+    white-space: pre-line; text-align: center;
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toastOut {
+    to { opacity: 0; transform: translateX(-50%) translateY(-15px); }
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 600px) {
+    .page-hero h1 { font-size: 1.6rem; }
+    .page-hero .hero-icon { font-size: 3rem; }
+    .activity-section { padding: 20px 15px; }
+}

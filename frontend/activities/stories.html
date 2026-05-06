@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>القصص الممتعة - نجوم التعلم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="activity-shared.css">
+    <style>
+        :root { --hero-start: #6C5CE7; --hero-end: #a29bfe; }
+
+        /* بطاقات القصص */
+        .stories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 22px;
+        }
+
+        .story-card {
+            background: var(--white);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 3px solid transparent;
+        }
+
+        .story-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary-color);
+            box-shadow: 0 18px 40px rgba(108,92,231,0.2);
+        }
+
+        .story-cover {
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-cover::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.08);
+        }
+
+        .story-body { padding: 18px; }
+        .story-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+        .story-excerpt { font-size: 0.88rem; color: var(--text-light); line-height: 1.6; }
+        .story-meta {
+            display: flex; gap: 12px; margin-top: 12px;
+            font-size: 0.8rem; color: var(--text-light);
+        }
+        .story-meta span { display: flex; align-items: center; gap: 4px; }
+
+        .story-badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .badge-islamic { background: #e8f5e9; color: #2E7D32; }
+        .badge-animals { background: #fff3e0; color: #E65100; }
+        .badge-values  { background: #e3f2fd; color: #1565C0; }
+        .badge-adventure { background: #fce4ec; color: #880E4F; }
+
+        .read-indicator {
+            display: inline-flex; align-items: center; gap: 4px;
+            color: var(--accent-green); font-size: 0.8rem; font-weight: 700;
+        }
+
+        /* قارئ القصة */
+        .story-reader {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .story-reader.active { display: block; }
+
+        .reader-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-purple));
+            color: var(--white);
+            border-radius: 22px 22px 0 0;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+
+        .reader-cover-emoji { font-size: 5rem; display: block; margin-bottom: 10px; }
+
+        .reader-close {
+            position: absolute;
+            top: 15px; left: 15px;
+            background: rgba(255,255,255,0.2);
+            border: none; color: var(--white);
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+
+        .reader-close:hover { background: rgba(255,255,255,0.3); }
+
+        .reader-body {
+            background: var(--white);
+            border-radius: 0 0 22px 22px;
+            padding: 30px;
+        }
+
+        .story-pages {
+            min-height: 200px;
+        }
+
+        .story-page { display: none; }
+        .story-page.active { display: block; }
+
+        .page-emoji {
+            font-size: 4rem;
+            text-align: center;
+            margin: 15px 0;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .page-text {
+            font-size: 1.15rem;
+            line-height: 2;
+            color: var(--text-dark);
+            text-align: justify;
+        }
+
+        .page-moral {
+            background: linear-gradient(135deg, #fff9c4, #ffecb3);
+            border-right: 5px solid #FFD700;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .reader-nav {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-top: 25px;
+            flex-wrap: wrap; gap: 12px;
+        }
+
+        .page-counter {
+            color: var(--text-light);
+            font-weight: 600; font-size: 0.9rem;
+        }
+
+        .page-dots {
+            display: flex; gap: 6px;
+        }
+
+        .page-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%; background: #ddd;
+            cursor: pointer; transition: var(--transition);
+        }
+
+        .page-dot.active { background: var(--primary-color); transform: scale(1.3); }
+        .page-dot.done   { background: var(--accent-green); }
+
+        .read-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-purple));
+            color: var(--white); border: none;
+            padding: 10px 22px; border-radius: 50px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; gap: 7px;
+        }
+        .read-btn:hover { transform: translateY(-2px); }
+        .read-btn.green { background: linear-gradient(135deg, var(--accent-green), #38EF7D); }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="container header-content">
+        <a href="../dashboard.html" class="logo">
+            <i class="fas fa-rocket"></i><span>عالم التعلم</span>
+        </a>
+        <a href="../dashboard.html" class="back-btn">
+            <i class="fas fa-arrow-right"></i><span>العودة</span>
+        </a>
+    </div>
+</header>
+
+<div class="page-hero">
+    <span class="hero-icon">📚</span>
+    <h1>القصص الممتعة</h1>
+    <p>قصص شيّقة مليئة بالمتعة والحكمة والقيم!</p>
+</div>
+
+<main class="container">
+    <div class="stars-bar">
+        <i class="fas fa-book-open"></i>
+        <span>قرأتُ: <strong id="readCount">0</strong> قصة 📖</span>
+    </div>
+
+    <!-- قارئ القصة -->
+    <section class="activity-section" id="readerSection" style="display:none; padding:0;">
+        <div class="story-reader active" id="storyReader">
+            <div class="reader-header" id="readerHeader">
+                <button class="reader-close" onclick="closeReader()"><i class="fas fa-times"></i></button>
+                <span class="reader-cover-emoji" id="readerEmoji">📖</span>
+                <h2 id="readerTitle">القصة</h2>
+            </div>
+            <div class="reader-body">
+                <div class="story-pages" id="storyPages"></div>
+                <div class="reader-nav">
+                    <button class="read-btn" id="prevPageBtn" onclick="changePage(-1)">
+                        <i class="fas fa-arrow-right"></i> السابقة
+                    </button>
+                    <div>
+                        <div class="page-counter" id="pageCounter">صفحة 1 من 1</div>
+                        <div class="page-dots" id="pageDots"></div>
+                    </div>
+                    <button class="read-btn" id="nextPageBtn" onclick="changePage(1)">
+                        التالية <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+                <div style="text-align:center; margin-top:18px;">
+                    <button class="read-btn" onclick="readAloud()">
+                        <i class="fas fa-volume-up"></i> اقرأ لي القصة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- شبكة القصص -->
+    <section class="activity-section" id="storiesListSection">
+        <h2 style="margin-bottom:20px; font-size:1.3rem;">
+            <i class="fas fa-book" style="color:var(--primary-color);"></i> اختاري قصتك المفضلة
+        </h2>
+        <div class="stories-grid" id="storiesGrid"></div>
+    </section>
+</main>
+
+<footer class="page-footer"><p>صنع بحب ❤️ لتعليم أطفالنا</p></footer>
+
+<script src="../api.js"></script>
+<script>
+    const stories = [
+        {
+            id: 'lion',
+            title: 'الأسد والفأر',
+            cover: '🦁',
+            gradient: 'linear-gradient(135deg,#FFD700,#FFA502)',
+            badge: 'badge-animals', badgeLabel: '🐾 حيوانات',
+            excerpt: 'قصة جميلة تعلّمنا أن الإحسان لا يضيع، ولو كان لأصغر المخلوقات!',
+            pages: [
+                { emoji: '🦁', text: 'كان يعيش في الغابة أسدٌ قويٌّ مهيب، يخشاه جميع الحيوانات ويهابونه. وكان الأسد يحبّ أن ينام كل يوم تحت شجرة كبيرة.' },
+                { emoji: '🐭', text: 'ذات يوم، بينما كان الأسد نائماً، مرّ فأرٌ صغير بالقرب منه وأيقظه بالخطأ! استيقظ الأسد غاضباً وأمسك بالفأر الصغير.' },
+                { emoji: '🙏', text: 'قال الفأر باكياً: "أرجوك يا سيد الغابة، أطلق سراحي وسأساعدك يوماً ما!" ضحك الأسد وقال: "كيف يمكن لفأر صغير مثلك أن يساعد ملك الغابة؟"' },
+                { emoji: '🕸️', text: 'لكنه أطلق سراحه رحمةً به. بعد أيام، وقع الأسد في شبكة الصيادين ولم يستطع الخروج منها مهما حاول.' },
+                { emoji: '✂️', text: 'سمع الفأر الصغير صراخ الأسد فجاء مسرعاً. قطع الفأر الحبال بأسنانه الصغيرة حتى تحرر الأسد! قال الأسد ممتناً: "معذرةً يا صديقي، لقد أثبتّ أن الصغير يستطيع مساعدة الكبير!"' },
+                { emoji: '🌟', text: 'العِبرة: الإحسان لا يضيع أبداً، حتى لو كان لأصغر المخلوقات. وكلّ كبير يحتاج يوماً لمن هو أصغر منه!', isMoral: true }
+            ]
+        },
+        {
+            id: 'honest',
+            title: 'الولد الأمين',
+            cover: '💎',
+            gradient: 'linear-gradient(135deg,#667eea,#764ba2)',
+            badge: 'badge-values', badgeLabel: '💛 قيم',
+            excerpt: 'قصة تحكي عن ولد صادق يكافئه الله على أمانته وصدقه.',
+            pages: [
+                { emoji: '👦', text: 'كان يوسف ولداً صغيراً طيّب القلب، تربّى والداه على حبّ الصدق والأمانة. كان الجميع في الحيّ يحبّونه لطيبته وصدقه.' },
+                { emoji: '💰', text: 'ذات يوم، وجد يوسف محفظةً على الأرض فيها الكثير من النقود. فكّر يوسف: "هذه ليست لي! لا بدّ أن صاحبها يبحث عنها ويحزن."' },
+                { emoji: '🔍', text: 'بدلاً من أخذ المحفظة، أخبر يوسف أمّه، ثم نادى في الشارع بصوت عالٍ حتى جاء رجلٌ عجوز يبكي قائلاً: "هذه معاشي الذي كنت أبحث عنه!"' },
+                { emoji: '🤝', text: 'عانق الرجل يوسف وقال: "شكراً لك يا بنيّ، لقد أنقذتني بأمانتك." حاول الرجل أن يعطيه مكافأة، لكنّ يوسف أبى وقال: "الأمانة واجب، لا ثمن لها."' },
+                { emoji: '🌟', text: 'العِبرة: الصدق والأمانة من أجمل الأخلاق. المؤمن الحقيقي يردّ الأمانة ولو كان يحتاج إليها!', isMoral: true }
+            ]
+        },
+        {
+            id: 'tree',
+            title: 'الشجرة الكريمة',
+            cover: '🌳',
+            gradient: 'linear-gradient(135deg,#00B894,#00CEC9)',
+            badge: 'badge-values', badgeLabel: '💛 قيم',
+            excerpt: 'قصة شجرة تعطي ولا تتوقف، وتعلّمنا معنى العطاء الحقيقي.',
+            pages: [
+                { emoji: '🌱', text: 'في حديقة جميلة، كانت تعيش شجرة تفاح كبيرة. كان الطفل سامي يأتي كلّ يوم ليلعب في ظلّها ويأكل من ثمارها الحلوة.' },
+                { emoji: '🍎', text: 'كانت الشجرة تحبّ سامي كثيراً وكانت تشعر بالسعادة كلّما رأته. كبر سامي وصار شاباً، وجاء إلى الشجرة يوماً حزيناً يريد المال.' },
+                { emoji: '🧺', text: 'قالت له الشجرة بحنان: "خذ ثماري وبعها في السوق." أخذ سامي الثمار وباعها وسعد، لكنّه لم يعد للشجرة لفترة طويلة.' },
+                { emoji: '🌳', text: 'بعد سنوات، عاد سامي كهلاً يريد مكاناً يرتاح فيه. قالت الشجرة: "اجلس على جذعي واسترح." فجلس سامي وشعر بالراحة والدفء.' },
+                { emoji: '💚', text: 'العِبرة: العطاء الحقيقي لا ينتظر مقابلاً. كن مثل الشجرة التي تعطي وتعطي ولا تتوقف!', isMoral: true }
+            ]
+        },
+        {
+            id: 'stars',
+            title: 'رحلة إلى النجوم',
+            cover: '🚀',
+            gradient: 'linear-gradient(135deg,#1E90FF,#A29BFE)',
+            badge: 'badge-adventure', badgeLabel: '🚀 مغامرة',
+            excerpt: 'مغامرة خيالية مع سلمى ورحلتها المثيرة إلى الفضاء والنجوم!',
+            pages: [
+                { emoji: '🌙', text: 'كانت سلمى تحبّ النجوم كثيراً وكانت كلّ ليلة تنظر من نافذتها إلى السماء وتتمنّى لو تصل إليها يوماً.' },
+                { emoji: '🚀', text: 'ذات ليلة، سمعت سلمى طرقاً على نافذتها، فوجدت مركبة فضائية صغيرة تلمع بألف لون وعليها مكتوب: "سلمى، هل تريدين الرحلة؟"' },
+                { emoji: '⭐', text: 'صعدت سلمى إلى المركبة فانطلقت بسرعة الضوء! رأت الأرض كرةً زرقاء جميلة، والقمر قريباً جدّاً، والنجوم تلمع كالماس.' },
+                { emoji: '🌌', text: 'قابلت سلمى نجمةً صغيرة وديعة قالت لها: "أنا كنت طفلةً مثلك، لكنّني كنت أحبّ التعلّم وبذلت جهدي، فأصبحت نجمةً تضيء السماء."' },
+                { emoji: '🌟', text: 'عادت سلمى إلى بيتها وفي قلبها حبٌّ كبير للعلم والمعرفة. العِبرة: العلم والجدّ يجعلانك نجماً يضيء الدنيا!', isMoral: true }
+            ]
+        },
+        {
+            id: 'rabbit',
+            title: 'الأرنب الذكي والثعلب',
+            cover: '🐰',
+            gradient: 'linear-gradient(135deg,#FFC371,#FF5F6D)',
+            badge: 'badge-animals', badgeLabel: '🐾 حيوانات',
+            excerpt: 'قصة أرنب صغير يستخدم ذكائه ليتغلب على ثعلب ماكر.',
+            pages: [
+                { emoji: '🌳', text: 'في غابة خضراء جميلة، كان يعيش أرنب صغير ذكي اسمه فلفول. وكان هناك ثعلب ماكر اسمه مكار يحاول دائماً اصطياد الحيوانات.' },
+                { emoji: '🥕', text: 'في أحد الأيام، كان فلفول يجمع الجزر عندما ظهر مكار فجأة وقال: "سألتهمك أيها الأرنب الصغير!"' },
+                { emoji: '💡', text: 'فكر فلفول بسرعة وقال: "انتظر يا مكار! هناك كنز مدفون خلف تلك الشجرة الكبيرة، هيا نذهب ونقتسمه."' },
+                { emoji: '🦊', text: 'تبع مكار فلفول إلى الشجرة، وهناك أشار فلفول إلى حفرة عميقة وقال: "الكنز في الأسفل، انزل أولاً!"' },
+                { emoji: '🏃', text: 'نزل مكار إلى الحفرة، وبمجرد أن أصبح في القاع، قفز فلفول بعيداً وهو يضحك. وهكذا نجا فلفول بذكائه.' },
+                { emoji: '🌟', text: 'العِبرة: الذكاء أفضل من القوة. استخدم عقلك لتتغلب على الصعوبات!', isMoral: true }
+            ]
+        },
+        {
+            id: 'seed',
+            title: 'رحلة البذرة الصغيرة',
+            cover: '🌱',
+            gradient: 'linear-gradient(135deg,#8BC34A,#CDDC39)',
+            badge: 'badge-values', badgeLabel: '💛 قيم',
+            excerpt: 'قصة بذرة صغيرة تتعلم الصبر والمثابرة لتصبح شجرة كبيرة.',
+            pages: [
+                { emoji: '🌰', text: 'كانت هناك بذرة صغيرة مدفونة تحت الأرض، تحلم بأن تصبح شجرة كبيرة وجميلة. لكنها كانت تشعر بالوحدة والظلام.' },
+                { emoji: '💧', text: 'في أحد الأيام، سقطت قطرات المطر على الأرض، وشعرت البذرة بالانتعاش. ثم بدأت الشمس ترسل أشعتها الدافئة.' },
+                { emoji: '💪', text: 'قالت البذرة لنفسها: "يجب أن أكون صبورة وقوية." وبدأت تدفع نفسها للأعلى، شيئاً فشيئاً.' },
+                { emoji: '🌳', text: 'بعد أيام وأسابيع، شقت البذرة طريقها إلى النور، وأصبحت نبتة صغيرة، ثم كبرت وأصبحت شجرة قوية ذات أوراق خضراء وثمار لذيذة.' },
+                { emoji: '💖', text: 'العِبرة: بالصبر والمثابرة، يمكننا تحقيق أحلامنا الكبيرة. لا تستسلم أبداً!', isMoral: true }
+            ]
+        },
+        {
+            id: 'brush',
+            title: 'الفرشاة السحرية',
+            cover: '🎨',
+            gradient: 'linear-gradient(135deg,#FF6B6B,#EE82EE)',
+            badge: 'badge-adventure', badgeLabel: '🚀 مغامرة',
+            excerpt: 'قصة فتاة تكتشف فرشاة سحرية تجعل رسوماتها حقيقة.',
+            pages: [
+                { emoji: '👧', text: 'كانت ليلى فتاة تحب الرسم كثيراً، لكنها كانت تتمنى لو أن رسوماتها يمكن أن تتحرك وتصبح حقيقية.' },
+                { emoji: '✨', text: 'في عيد ميلادها، أهدتها جدتها فرشاة قديمة وقالت: "هذه ليست أي فرشاة، إنها فرشاة سحرية!"' },
+                { emoji: '🦋', text: 'رسمت ليلى فراشة جميلة، وفجأة، رفرفت الفراشة بأجنحتها وطارت في الغرفة! كانت ليلى سعيدة جداً.' },
+                { emoji: '🏰', text: 'رسمت ليلى قلعة كبيرة وحديقة مليئة بالزهور، وكل شيء رسمته أصبح حقيقة. قضت ليلى يوماً رائعاً في عالمها السحري.' },
+                { emoji: '🌈', text: 'العِبرة: الخيال هو أقوى قوة لديك. استخدم خيالك لتصنع عالماً جميلاً!', isMoral: true }
+            ]
+        },
+        {
+            id: 'star_friend',
+            title: 'الفتى وصديقه النجم',
+            cover: '🌟',
+            gradient: 'linear-gradient(135deg,#4CAF50,#8BC34A)',
+            badge: 'badge-adventure', badgeLabel: '🚀 مغامرة',
+            excerpt: 'قصة صداقة فريدة بين فتى ونجم صغير سقط من السماء.',
+            pages: [
+                { emoji: '👦', text: 'في ليلة هادئة، كان أحمد ينظر إلى السماء عندما رأى نجماً صغيراً يسقط ببطء نحو الأرض. ركض أحمد ليجده.' },
+                { emoji: '✨', text: 'وجد أحمد النجم الصغير يلمع على العشب. كان النجم خائفاً ووحيداً. أخذه أحمد إلى بيته واعتنى به.' },
+                { emoji: '🤝', text: 'أصبح أحمد والنجم الصغير صديقين حميمين. كان النجم يضيء غرفة أحمد ليلاً، ويحكي له قصص المجرات البعيدة.' },
+                { emoji: '🌌', text: 'بعد أيام، اشتاق النجم إلى عائلته في السماء. ساعده أحمد على العودة، ووعده النجم بأنه سيبقى يضيء له كل ليلة.' },
+                { emoji: '🌠', text: 'العِبرة: الصداقة الحقيقية لا تعرف المسافات. كن صديقاً وفياً، وستجد الأصدقاء حولك دائماً!', isMoral: true }
+            ]
+        },
+        {
+            id: 'ant_grasshopper',
+            title: 'النملة والصرصور',
+            cover: '🐜',
+            gradient: 'linear-gradient(135deg,#FFEB3B,#FFC107)',
+            badge: 'badge-animals', badgeLabel: '🐾 حيوانات',
+            excerpt: 'قصة كلاسيكية عن أهمية العمل الجاد والتخطيط للمستقبل.',
+            pages: [
+                { emoji: '☀️', text: 'في فصل الصيف الدافئ، كانت النملة النشيطة تجمع الطعام وتخزنه لفصل الشتاء. بينما كان الصرصور الكسول يعزف ويغني.' },
+                { emoji: '🎶', text: 'قالت النملة للصرصور: "لماذا لا تجمع الطعام مثلي؟ سيأتي الشتاء قريباً ولن تجد ما تأكله." ضحك الصرصور وقال: "لدي الكثير من الوقت!"' },
+                { emoji: '❄️', text: 'جاء فصل الشتاء البارد، وأصبحت الأرض مغطاة بالثلج. لم يجد الصرصور أي طعام، وشعر بالجوع والبرد الشديد.' },
+                { emoji: '🏡', text: 'ذهب الصرصور إلى بيت النملة وطلب منها الطعام. أعطته النملة بعض الطعام وقالت: "العمل في الصيف يضمن الراحة في الشتاء."' },
+                { emoji: '⭐', text: 'العِبرة: العمل الجاد والتخطيط للمستقبل يجلبان الأمان والراحة. لا تؤجل عمل اليوم إلى الغد!', isMoral: true }
+            ]
+        }
+    ];
+
+    let currentStory = null;
+    let currentPage  = 0;
+    let readStories  = new Set(JSON.parse(localStorage.getItem('readStories') || '[]'));
+
+    // === رسم قائمة القصص ===
+    function renderStories() {
+        const grid = document.getElementById('storiesGrid');
+        grid.innerHTML = '';
+        stories.forEach(s => {
+            const isRead = readStories.has(s.id);
+            const card = document.createElement('div');
+            card.className = 'story-card';
+            card.innerHTML = `
+                <div class="story-cover" style="background:${s.gradient};">${s.cover}</div>
+                <div class="story-body">
+                    <span class="story-badge ${s.badge}">${s.badgeLabel}</span>
+                    <div class="story-title">${s.title}</div>
+                    <div class="story-excerpt">${s.excerpt}</div>
+                    <div class="story-meta">
+                        <span><i class="fas fa-file-alt"></i> ${s.pages.length} صفحات</span>
+                        ${isRead ? '<span class="read-indicator"><i class="fas fa-check-circle"></i> قرأتُها ✅</span>' : ''}
+                    </div>
+                </div>
+            `;
+            card.onclick = () => openStory(s);
+            grid.appendChild(card);
+        });
+        document.getElementById('readCount').textContent = readStories.size;
+    }
+
+    // === فتح القصة ===
+    function openStory(s) {
+        currentStory = s;
+        currentPage  = 0;
+        document.getElementById('readerSection').style.display = 'block';
+        document.getElementById('storiesListSection').style.display = 'none';
+        document.getElementById('readerEmoji').textContent  = s.cover;
+        document.getElementById('readerTitle').textContent  = s.title;
+        document.getElementById('readerHeader').style.background = s.gradient;
+        renderPages();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeReader() {
+        document.getElementById('readerSection').style.display = 'none';
+        document.getElementById('storiesListSection').style.display = 'block';
+        speechSynthesis.cancel();
+    }
+
+    // === رسم صفحات القصة ===
+    function renderPages() {
+        const container = document.getElementById('storyPages');
+        container.innerHTML = '';
+        currentStory.pages.forEach((p, i) => {
+            const page = document.createElement('div');
+            page.className = 'story-page' + (i === currentPage ? ' active' : '');
+            page.id = `page-${i}`;
+            if (p.isMoral) {
+                page.innerHTML = `<span class="page-emoji">${p.emoji}</span><div class="page-moral">💡 ${p.text}</div>`;
+            } else {
+                page.innerHTML = `<span class="page-emoji">${p.emoji}</span><p class="page-text">${p.text}</p>`;
+            }
+            container.appendChild(page);
+        });
+        updateNavigation();
+
+        // تحديث النقاط
+        const dots = document.getElementById('pageDots');
+        dots.innerHTML = '';
+        currentStory.pages.forEach((_, i) => {
+            const d = document.createElement('div');
+            d.className = 'page-dot' + (i === currentPage ? ' active' : '') + (i < currentPage ? ' done' : '');
+            d.onclick = () => goToPage(i);
+            dots.appendChild(d);
+        });
+    }
+
+    function changePage(dir) {
+        const next = currentPage + dir;
+        if (next < 0 || next >= currentStory.pages.length) {
+            if (next >= currentStory.pages.length) finishStory();
+            return;
+        }
+        goToPage(next);
+    }
+
+    function goToPage(i) {
+        document.querySelectorAll('.story-page').forEach(p => p.classList.remove('active'));
+        document.getElementById(`page-${i}`)?.classList.add('active');
+        currentPage = i;
+        updateNavigation();
+    }
+
+    function updateNavigation() {
+        const total = currentStory?.pages.length || 1;
+        document.getElementById('pageCounter').textContent = `صفحة ${currentPage + 1} من ${total}`;
+        document.querySelectorAll('.page-dot').forEach((d, i) => {
+            d.classList.toggle('active', i === currentPage);
+            d.classList.toggle('done', i < currentPage);
+        });
+        const nextBtn = document.getElementById('nextPageBtn');
+        const isLast = currentPage === total - 1;
+        nextBtn.innerHTML = isLast
+            ? '<i class="fas fa-check"></i> أنهيت القصة!'
+            : 'التالية <i class="fas fa-arrow-left"></i>';
+        nextBtn.className = 'read-btn' + (isLast ? ' green' : '');
+    }
+
+    function finishStory() {
+        if (!readStories.has(currentStory.id)) {
+            readStories.add(currentStory.id);
+            localStorage.setItem('readStories', JSON.stringify([...readStories]));
+            const saved2 = JSON.parse(localStorage.getItem('childLearningProgress') || '{}');
+            saved2.stars = (parseInt(saved2.stars || 0) + 5).toString();
+            localStorage.setItem('childLearningProgress', JSON.stringify(saved2));
+            try {
+                const session = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+                if (session?.type === 'child') {
+                    const accounts = JSON.parse(localStorage.getItem('kidsAppAccounts') || 'null');
+                    if (accounts) {
+                        const idx = accounts.children.findIndex(c => String(c.id) === String(session.id));
+                        if (idx !== -1) {
+                            accounts.children[idx].stars = (accounts.children[idx].stars || 0) + 5;
+                            localStorage.setItem('kidsAppAccounts', JSON.stringify(accounts));
+                        }
+                    }
+                }
+            } catch(e) {}
+            try { if (typeof syncActivityToAPI === 'function') syncActivityToAPI('stories', 5, 0, 1, { storyId: currentStory.id, title: currentStory.title }); } catch(e) {}
+            createConfetti();
+            showToast(`🎉 أحسنتِ! أنهيتِ قصة "${currentStory.title}" وكسبتِ 5 نجوم! ⭐`);
+        }
+        setTimeout(() => { closeReader(); renderStories(); }, 1500);
+    }
+
+    function readAloud() {
+        const page = currentStory?.pages[currentPage];
+        if (!page) return;
+        const text = page.text.replace('💡 ', '');
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ar-SA'; u.rate = 0.85; u.pitch = 1.1;
+        speechSynthesis.speak(u);
+    }
+
+    function showToast(msg) {
+        document.querySelector('.toast')?.remove();
+        const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+        document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
+    }
+
+    function createConfetti() {
+        for (let i = 0; i < 30; i++) {
+            setTimeout(() => {
+                const c = document.createElement('div'); c.className = 'confetti-piece';
+                c.style.left = Math.random() * 100 + 'vw'; c.style.top = '-10px';
+                c.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                c.style.animationDuration = (2 + Math.random() * 1.5) + 's';
+                document.body.appendChild(c); setTimeout(() => c.remove(), 4500);
+            }, i * 80);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            const session = JSON.parse(localStorage.getItem('kidsAppSession') || 'null');
+            if (!session || session.type !== 'child') { location.href = '../login.html'; return; }
+        } catch(e) {}
+        renderStories();
+    });
+</script>
+</body>
+</html>

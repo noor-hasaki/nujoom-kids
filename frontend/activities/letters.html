@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>الحروف — نجوم التعلم</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --space-darkest:#0d0022;--space-dark:#1a0040;--space-mid:#2d006a;--space-bright:#6b21c8;
+  --yellow:#FFD700;--orange:#FF7A00;--pink:#FF3D8E;--cyan:#00D4FF;
+  --green:#00E676;--mint:#1DE9B6;--red:#FF4757;--indigo:#5352ED;--purple:#A855F7;
+  --white:#fff;
+  --r-full:9999px;--r-xl:32px;--r-lg:24px;--r:18px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:var(--space-dark);color:#fff;min-height:100vh;overflow-x:hidden;}
+.space-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 20% 20%,rgba(107,33,200,.5) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 80%,rgba(45,0,106,.8) 0%,transparent 55%),
+             linear-gradient(155deg,#0d0022 0%,#1a0040 35%,#2d006a 70%,#1a0040 100%);}
+#starsCanvas{position:fixed;inset:0;z-index:1;pointer-events:none;}
+
+/* ── TOP BAR ── */
+.top-bar{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);background:rgba(13,0,34,.92);
+  border-bottom:1px solid rgba(255,255,255,.08);padding:0 16px;height:60px;
+  display:flex;align-items:center;gap:12px;}
+.btn-back-page{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.08);
+  border:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.8);font-size:17px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.btn-back-page:hover{background:rgba(255,255,255,.18);transform:translateX(3px);}
+.top-bar-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:18px;font-weight:900;flex:1;}
+.top-bar-pill{background:rgba(255,215,0,.15);border:1.5px solid rgba(255,215,0,.3);
+  border-radius:var(--r-full);padding:5px 14px;font-family:'Baloo Bhaijaan 2',cursive;
+  font-size:14px;font-weight:900;color:var(--yellow);}
+
+/* ── MAIN WRAP ── */
+.main{position:relative;z-index:2;padding:18px 14px 40px;}
+
+/* ── TYPE TABS ── */
+.type-tabs{display:flex;gap:8px;background:rgba(255,255,255,.07);border-radius:var(--r-full);
+  padding:5px;margin-bottom:22px;}
+.type-tab{flex:1;padding:11px;border:none;background:transparent;border-radius:var(--r-full);
+  font-family:'Baloo Bhaijaan 2',cursive;font-size:15px;font-weight:800;
+  color:rgba(255,255,255,.5);cursor:pointer;transition:all .25s;}
+.type-tab.active{background:var(--yellow);color:#1a1a2e;box-shadow:0 4px 15px rgba(255,215,0,.3);}
+
+/* ── HERO STATS ── */
+.hero-stats{display:flex;gap:10px;margin-bottom:20px;}
+.stat-box{flex:1;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:14px 10px;text-align:center;}
+.stat-num{font-family:'Baloo Bhaijaan 2',cursive;font-size:26px;font-weight:900;}
+.stat-lbl{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;}
+.stat-bar{height:5px;background:rgba(255,255,255,.1);border-radius:3px;margin-top:8px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+
+/* ── LETTERS GRID ── */
+.letters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-bottom:24px;}
+@media(min-width:480px){.letters-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));}}
+@media(min-width:768px){.letters-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));}}
+
+.letter-card{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:12px 8px 10px;text-align:center;cursor:pointer;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  animation:card-in .4s ease both;}
+@keyframes card-in{from{opacity:0;transform:scale(.85) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.letter-card:hover{transform:translateY(-6px) scale(1.04);border-color:var(--lc,#FFD700);
+  background:rgba(255,255,255,.13);box-shadow:0 10px 30px rgba(0,0,0,.25);}
+.letter-card.done{border-color:var(--green);background:rgba(0,230,118,.08);}
+.letter-card.active-card{border-color:var(--yellow);background:rgba(255,215,0,.12);
+  box-shadow:0 0 20px rgba(255,215,0,.25);}
+.lc-type-badge{font-size:8px;font-weight:800;background:rgba(255,255,255,.12);
+  border-radius:var(--r-full);padding:2px 8px;color:rgba(255,255,255,.55);margin-bottom:2px;}
+.lc-emoji{font-size:28px;line-height:1;animation:float-em 4s ease-in-out infinite var(--ld,0s);}
+@keyframes float-em{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.lc-letter{font-family:'Baloo Bhaijaan 2',cursive;font-size:30px;font-weight:900;
+  color:var(--lc,#FFD700);line-height:1;text-shadow:0 0 20px var(--lc,#FFD700)44;}
+.lc-name{font-family:'Baloo Bhaijaan 2',cursive;font-size:10px;font-weight:700;
+  color:rgba(255,255,255,.5);line-height:1.2;}
+.lc-done-mark{position:absolute;top:5px;left:5px;width:18px;height:18px;border-radius:50%;
+  background:var(--green);display:flex;align-items:center;justify-content:center;
+  font-size:10px;box-shadow:0 0 8px rgba(0,230,118,.5);}
+
+/* ── DETAIL PANEL ── */
+.detail-panel{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.12);
+  border-radius:var(--r-xl);margin-bottom:24px;overflow:hidden;
+  animation:panel-in .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes panel-in{from{opacity:0;transform:scale(.97) translateY(15px)}to{opacity:1;transform:none}}
+.detail-header{display:flex;align-items:center;gap:12px;padding:16px 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);}
+.btn-close-detail{width:38px;height:38px;border-radius:11px;background:rgba(255,71,87,.15);
+  border:1px solid rgba(255,71,87,.25);color:#ff8091;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.btn-close-detail:hover{background:rgba(255,71,87,.3);}
+.detail-nav{display:flex;gap:8px;margin-right:auto;}
+.detail-nav-btn{width:36px;height:36px;border-radius:11px;border:1.5px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.detail-nav-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+.detail-nav-btn.next{background:linear-gradient(135deg,var(--cyan),var(--indigo));
+  border-color:transparent;color:#fff;}
+.detail-body{padding:20px 18px;}
+
+/* letter big display */
+.dl-letter-row{display:flex;align-items:center;gap:18px;margin-bottom:18px;}
+.dl-big{font-family:'Baloo Bhaijaan 2',cursive;font-size:96px;font-weight:900;line-height:1;
+  color:var(--dlc,#FFD700);text-shadow:0 0 50px var(--dlc,#FFD700)44,0 6px 0 rgba(0,0,0,.2);
+  animation:lb-anim 2.5s ease-in-out infinite;flex-shrink:0;}
+@keyframes lb-anim{0%,100%{transform:scale(1)rotate(-3deg)}50%{transform:scale(1.06)rotate(3deg)}}
+.dl-info{flex:1;}
+.dl-name-pill{display:inline-block;background:var(--dlc,#FFD700);color:#1a1a2e;
+  border-radius:var(--r-full);padding:5px 18px;font-family:'Baloo Bhaijaan 2',cursive;
+  font-size:16px;font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.2);margin-bottom:10px;}
+.dl-forms{display:flex;gap:7px;flex-wrap:wrap;}
+.dl-form-item{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.12);
+  border-radius:12px;padding:7px 10px;text-align:center;min-width:52px;}
+.dl-form-lbl{font-size:9px;color:rgba(255,255,255,.4);display:block;margin-bottom:2px;}
+.dl-form-char{font-family:'Baloo Bhaijaan 2',cursive;font-size:22px;font-weight:800;
+  color:var(--dlc,#FFD700);}
+
+/* example row */
+.dl-example{display:flex;align-items:center;gap:14px;background:rgba(255,215,0,.07);
+  border:1.5px solid rgba(255,215,0,.18);border-radius:18px;padding:12px 16px;margin-bottom:14px;}
+.dl-ex-emoji{font-size:48px;animation:float-em 3s ease-in-out infinite;flex-shrink:0;}
+.dl-ex-word{font-family:'Baloo Bhaijaan 2',cursive;font-size:20px;font-weight:900;}
+.dl-ex-mean{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px;}
+.dl-tip{background:rgba(255,255,255,.05);border:1.5px dashed rgba(255,255,255,.12);
+  border-radius:14px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,.6);
+  line-height:1.6;margin-bottom:16px;}
+
+/* actions */
+.dl-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.dl-btn{display:flex;align-items:center;gap:7px;border:none;border-radius:var(--r-full);
+  padding:12px 24px;font-family:'Baloo Bhaijaan 2',cursive;font-size:14px;font-weight:800;
+  cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.2);transition:all .2s cubic-bezier(.34,1.56,.64,1);}
+.dl-btn:hover{transform:translateY(-3px);}
+.dl-btn-listen{background:linear-gradient(135deg,var(--indigo),var(--purple));color:#fff;}
+.dl-btn-done{background:linear-gradient(135deg,var(--green),var(--mint));color:#0a0a1e;}
+.dl-btn-done:disabled{opacity:.5;pointer-events:none;}
+
+/* dots nav */
+.dots-scroll{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
+  padding:14px 10px;border-top:1px solid rgba(255,255,255,.07);}
+.d-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.15);
+  cursor:pointer;transition:all .3s;flex-shrink:0;}
+.d-dot.d-done{background:var(--green);box-shadow:0 0 6px var(--green);}
+.d-dot.d-cur{width:26px;border-radius:5px;background:var(--yellow);box-shadow:0 0 8px rgba(255,215,0,.5);}
+
+/* ── TOAST & EFFECTS ── */
+.toast-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#1a0040,#2d006a);border:1.5px solid rgba(255,255,255,.15);
+  border-radius:var(--r-full);padding:12px 26px;font-family:'Baloo Bhaijaan 2',cursive;
+  font-size:14px;font-weight:800;color:#fff;box-shadow:0 12px 36px rgba(0,0,0,.4);
+  white-space:nowrap;pointer-events:none;z-index:5000;
+  animation:toast-in .35s ease,toast-out .35s ease 2.3s forwards;}
+@keyframes toast-in{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toast-out{to{opacity:0;transform:translate(-50%,-10px)}}
+.star-fx{position:fixed;font-size:26px;pointer-events:none;z-index:9000;
+  animation:starfx 1.8s ease-out forwards;}
+@keyframes starfx{0%{opacity:1;transform:translate(0,0)scale(1)}60%{opacity:1;transform:translate(var(--tx,0),-80px)scale(1.5)}100%{opacity:0;transform:translate(var(--tx2,0),-160px)scale(.5)}}
+.confetti-p{position:fixed;border-radius:3px;pointer-events:none;z-index:9999;
+  animation:cf-fall var(--cfd,3s) ease-out forwards;}
+@keyframes cf-fall{0%{transform:translateY(-10px)rotate(0);opacity:1}100%{transform:translateY(100vh)rotate(720deg);opacity:0}}
+
+/* ── COMPLETE CELEBRATION ── */
+.complete-banner{background:linear-gradient(135deg,rgba(0,230,118,.2),rgba(29,233,182,.15));
+  border:2px solid rgba(0,230,118,.4);border-radius:var(--r-xl);padding:20px;
+  text-align:center;margin-bottom:20px;}
+.cb-icon{font-size:56px;display:block;margin-bottom:8px;animation:lb-anim 2s ease-in-out infinite;}
+.cb-title{font-family:'Baloo Bhaijaan 2',cursive;font-size:22px;font-weight:900;color:var(--green);}
+.cb-sub{font-size:13px;color:rgba(255,255,255,.6);margin-top:5px;}
+</style>
+</head>
+<body>
+<div class="space-bg"></div>
+<canvas id="starsCanvas"></canvas>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <button class="btn-back-page" onclick="goBack()" title="رجوع">
+    <i class="fas fa-arrow-right"></i>
+  </button>
+  <div class="top-bar-title" id="pageTitle">الحروف العربية</div>
+  <div class="top-bar-pill" id="progressPill">٠ / ٢٨</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TYPE TABS -->
+  <div class="type-tabs">
+    <button class="type-tab active" onclick="switchType('arabic',this)">🔤 عربية (٢٨)</button>
+    <button class="type-tab" onclick="switchType('english',this)">🔡 إنجليزية (٢٦)</button>
+  </div>
+
+  <!-- COMPLETE BANNER (hidden by default) -->
+  <div class="complete-banner" id="completeBanner" style="display:none;">
+    <span class="cb-icon">🪐</span>
+    <div class="cb-title">مبروك! أكملت جميع الحروف! 🎉</div>
+    <div class="cb-sub">لقد فتحت كوكباً جديداً في سمائك! ⭐</div>
+  </div>
+
+  <!-- HERO STATS -->
+  <div class="hero-stats" id="heroStats"></div>
+
+  <!-- DETAIL PANEL (hidden by default) -->
+  <div class="detail-panel" id="detailPanel" style="display:none;">
+    <div class="detail-header">
+      <button class="btn-close-detail" onclick="closeDetail()" title="إغلاق">
+        <i class="fas fa-times"></i>
+      </button>
+      <div style="font-family:'Baloo Bhaijaan 2',cursive;font-size:15px;font-weight:800;" id="detailHeaderTitle">تفاصيل الحرف</div>
+      <div class="detail-nav">
+        <button class="detail-nav-btn" onclick="detailMove(-1)" title="السابق"><i class="fas fa-arrow-right"></i></button>
+        <button class="detail-nav-btn next" onclick="detailMove(1)" title="التالي"><i class="fas fa-arrow-left"></i></button>
+      </div>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+    <div class="dots-scroll" id="detailDots"></div>
+  </div>
+
+  <!-- LETTERS GRID -->
+  <div class="letters-grid" id="lettersGrid"></div>
+
+</div>
+
+<script src="../api.js"></script>
+<script>
+/* =================== DATA =================== */
+const AR = [
+  {l:'ا',n:'ألف',  f:{i:'اـ',m:'ـا',e:'ـا'},ex:'أَرَنَب',  em:'🐰',mn:'حيوان أبيض صغير وسريع',  tip:'أطول حرف في اللغة — آآآ',               col:'#FF6B9D'},
+  {l:'ب',n:'باء',  f:{i:'بـ',m:'ـبـ',e:'ـب'},ex:'بَطَّة',   em:'🦆',mn:'طائر يسبح في الماء',       tip:'نقطة واحدة تحتها ← سهل!',              col:'#FF7A00'},
+  {l:'ت',n:'تاء',  f:{i:'تـ',m:'ـتـ',e:'ـت'},ex:'تُفَّاح', em:'🍎',mn:'فاكهة حمراء لذيذة',        tip:'نقطتان فوقها',                          col:'#FFD700'},
+  {l:'ث',n:'ثاء',  f:{i:'ثـ',m:'ـثـ',e:'ـث'},ex:'ثَعْلَب', em:'🦊',mn:'حيوان ذكي ذو ذيل كبير',   tip:'ثلاث نقاط فوقها — ثَثَثَ',             col:'#A855F7'},
+  {l:'ج',n:'جيم',  f:{i:'جـ',m:'ـجـ',e:'ـج'},ex:'جَمَل',   em:'🐪',mn:'سفينة الصحراء',            tip:'نقطة واحدة تحتها',                      col:'#1ABC9C'},
+  {l:'ح',n:'حاء',  f:{i:'حـ',m:'ـحـ',e:'ـح'},ex:'حِمَار',  em:'🫏',mn:'حيوان صابر ومجتهد',        tip:'مثل الجيم لكن بدون نقطة',               col:'#00E676'},
+  {l:'خ',n:'خاء',  f:{i:'خـ',m:'ـخـ',e:'ـخ'},ex:'خَرُوف',  em:'🐑',mn:'حيوان أبيض ناعم',          tip:'نقطة فوق الحاء ← خاء',                 col:'#1E90FF'},
+  {l:'د',n:'دال',  f:{i:'د', m:'ـد', e:'ـد'},ex:'دُبّ',    em:'🐻',mn:'حيوان ضخم يحب العسل',      tip:'لا تتصل من اليسار — مثل الباب',         col:'#5352ED'},
+  {l:'ذ',n:'ذال',  f:{i:'ذ', m:'ـذ', e:'ـذ'},ex:'ذِئْب',   em:'🐺',mn:'حيوان بري في الغابة',      tip:'مثل الدال لكن بنقطة فوق',               col:'#FF3D8E'},
+  {l:'ر',n:'راء',  f:{i:'ر', m:'ـر', e:'ـر'},ex:'رُمَّان', em:'🍎',mn:'فاكهة حمراء مليئة بالبذور',tip:'منحنية مثل خطاف — ررر',                col:'#FF6B9D'},
+  {l:'ز',n:'زاي',  f:{i:'ز', m:'ـز', e:'ـز'},ex:'زَهْرَة', em:'🌸',mn:'نبتة جميلة عطرة',           tip:'مثل الراء لكن بنقطة فوق',               col:'#00D4FF'},
+  {l:'س',n:'سين',  f:{i:'سـ',m:'ـسـ',e:'ـس'},ex:'سَيَّارَة',em:'🚗',mn:'وسيلة نقل سريعة',          tip:'ثلاثة أسنان صغيرة في الأسفل',           col:'#FFD700'},
+  {l:'ش',n:'شين',  f:{i:'شـ',m:'ـشـ',e:'ـش'},ex:'شَمْس',   em:'☀️',mn:'النجم الذي يضيء الأرض',    tip:'مثل السين لكن بثلاث نقاط فوق',          col:'#FF7A00'},
+  {l:'ص',n:'صاد',  f:{i:'صـ',m:'ـصـ',e:'ـص'},ex:'صَقْر',   em:'🦅',mn:'طائر سريع وقوي',           tip:'دائرة صغيرة مع ذيل',                    col:'#A855F7'},
+  {l:'ض',n:'ضاد',  f:{i:'ضـ',m:'ـضـ',e:'ـض'},ex:'ضِفْدَع', em:'🐸',mn:'حيوان يقفز ويسبح',         tip:'مثل الصاد لكن بنقطة فوق',               col:'#00E676'},
+  {l:'ط',n:'طاء',  f:{i:'طـ',m:'ـطـ',e:'ـط'},ex:'طَاوُوس', em:'🦚',mn:'طائر جميل ملوّن',           tip:'دائرة كبيرة مع خط عمودي',               col:'#1E90FF'},
+  {l:'ظ',n:'ظاء',  f:{i:'ظـ',m:'ـظـ',e:'ـظ'},ex:'ظَرْف',   em:'✉️',mn:'غلاف للرسائل',             tip:'مثل الطاء لكن بنقطة فوق',               col:'#FF3D8E'},
+  {l:'ع',n:'عين',  f:{i:'عـ',m:'ـعـ',e:'ـع'},ex:'عَنَب',   em:'🍇',mn:'فاكهة بنفسجية حلوة',       tip:'يشبه عين تنظر إليك',                    col:'#5352ED'},
+  {l:'غ',n:'غين',  f:{i:'غـ',m:'ـغـ',e:'ـغ'},ex:'غَزَال',  em:'🦌',mn:'حيوان رشيق ورشيق وسريع',   tip:'مثل العين لكن بنقطة فوق',               col:'#1ABC9C'},
+  {l:'ف',n:'فاء',  f:{i:'فـ',m:'ـفـ',e:'ـف'},ex:'فِيل',    em:'🐘',mn:'أكبر حيوان على اليابسة',   tip:'دائرة مع نقطة فوق',                     col:'#FF6B9D'},
+  {l:'ق',n:'قاف',  f:{i:'قـ',m:'ـقـ',e:'ـق'},ex:'قِطَّة',  em:'🐱',mn:'حيوان أليف يموء',           tip:'مثل الفاء لكن بنقطتين فوق',             col:'#FFD700'},
+  {l:'ك',n:'كاف',  f:{i:'كـ',m:'ـكـ',e:'ـك'},ex:'كِتَاب',  em:'📚',mn:'مصدر العلم والمعرفة',      tip:'يشبه حرف K الإنجليزي',                  col:'#FF7A00'},
+  {l:'ل',n:'لام',  f:{i:'لـ',m:'ـلـ',e:'ـل'},ex:'لَيْمُون',em:'🍋',mn:'فاكهة صفراء حامضة',        tip:'خط مستقيم ثم دائرة — ل',               col:'#00D4FF'},
+  {l:'م',n:'ميم',  f:{i:'مـ',m:'ـمـ',e:'ـم'},ex:'مَوْز',   em:'🍌',mn:'فاكهة صفراء حلوة',         tip:'دائرة صغيرة — مثل الفم ميم!',           col:'#A855F7'},
+  {l:'ن',n:'نون',  f:{i:'نـ',m:'ـنـ',e:'ـن'},ex:'نَحْلَة', em:'🐝',mn:'حشرة تصنع العسل',          tip:'نقطة واحدة فوق القوس',                  col:'#00E676'},
+  {l:'ه',n:'هاء',  f:{i:'هـ',m:'ـهـ',e:'ـه'},ex:'هِلَال',  em:'🌙',mn:'شكل القمر في أوله',         tip:'مثل دائرة صغيرة مفتوحة',                col:'#1E90FF'},
+  {l:'و',n:'واو',  f:{i:'و', m:'ـو', e:'ـو'},ex:'وَرْد',   em:'🌹',mn:'زهرة جميلة عطرة',           tip:'مثل رأس وخطم — واو!',                  col:'#FF3D8E'},
+  {l:'ي',n:'ياء',  f:{i:'يـ',m:'ـيـ',e:'ـي'},ex:'يَد',     em:'✋',mn:'الجزء الذي نكتب ونمسك به',  tip:'نقطتان تحتها — آخر الحروف!',           col:'#5352ED'},
+];
+
+const EN = [
+  {l:'A',s:'a',n:'Ay',  ex:'Apple',    em:'🍎',mn:'تفاحة',         tip:'فم مفتوح آآآه',                col:'#FF6B9D'},
+  {l:'B',s:'b',n:'Bee', ex:'Ball',     em:'⚽',mn:'كرة',           tip:'أغلق شفتيك ثم افتحها — ب',    col:'#FF7A00'},
+  {l:'C',s:'c',n:'See', ex:'Cat',      em:'🐱',mn:'قطة',           tip:'قوس مثل القمر',                col:'#FFD700'},
+  {l:'D',s:'d',n:'Dee', ex:'Dog',      em:'🐶',mn:'كلب',           tip:'دائرة مع خط مستقيم',           col:'#A855F7'},
+  {l:'E',s:'e',n:'Ee',  ex:'Elephant', em:'🐘',mn:'فيل',           tip:'ابتسم وقل إيي',                col:'#1ABC9C'},
+  {l:'F',s:'f',n:'Ef',  ex:'Fish',     em:'🐟',mn:'سمكة',          tip:'أسنانك على شفتك السفلى',       col:'#00E676'},
+  {l:'G',s:'g',n:'Jee', ex:'Giraffe',  em:'🦒',mn:'زرافة',         tip:'قل جـ من عمق الحلق',           col:'#1E90FF'},
+  {l:'H',s:'h',n:'Aitch',ex:'Horse',   em:'🐴',mn:'حصان',          tip:'هواء دافئ — هـه',              col:'#5352ED'},
+  {l:'I',s:'i',n:'Eye', ex:'Ice Cream',em:'🍦',mn:'آيس كريم',      tip:'خط مستقيم مع نقطة',            col:'#FF3D8E'},
+  {l:'J',s:'j',n:'Jay', ex:'Juice',    em:'🧃',mn:'عصير',          tip:'خطاف صغير — جاي',              col:'#FF6B9D'},
+  {l:'K',s:'k',n:'Kay', ex:'Kite',     em:'🪁',mn:'طائرة ورقية',   tip:'خط مع ذراعين مفتوحتين',        col:'#FF7A00'},
+  {l:'L',s:'l',n:'El',  ex:'Lion',     em:'🦁',mn:'أسد',           tip:'خط مستقيم ثم خط أفقي — L',    col:'#FFD700'},
+  {l:'M',s:'m',n:'Em',  ex:'Monkey',   em:'🐒',mn:'قرد',           tip:'جبلان صغيران — مم',            col:'#A855F7'},
+  {l:'N',s:'n',n:'En',  ex:'Nest',     em:'🪺',mn:'عش',            tip:'خط أسفل ثم فوق — نن',         col:'#1ABC9C'},
+  {l:'O',s:'o',n:'Oh',  ex:'Orange',   em:'🍊',mn:'برتقالة',       tip:'دائرة كاملة — أوه',            col:'#00E676'},
+  {l:'P',s:'p',n:'Pee', ex:'Penguin',  em:'🐧',mn:'بطريق',         tip:'دائرة مع خط فوق',              col:'#1E90FF'},
+  {l:'Q',s:'q',n:'Cue', ex:'Queen',    em:'👸',mn:'ملكة',          tip:'دائرة مع ذيل صغير',            col:'#5352ED'},
+  {l:'R',s:'r',n:'Ar',  ex:'Rainbow',  em:'🌈',mn:'قوس قزح',       tip:'خط ثم ذراع صغيرة — رر',       col:'#FF3D8E'},
+  {l:'S',s:'s',n:'Es',  ex:'Star',     em:'⭐',mn:'نجمة',          tip:'ثعبان صغير — سس',              col:'#FF6B9D'},
+  {l:'T',s:'t',n:'Tee', ex:'Tiger',    em:'🐯',mn:'نمر',           tip:'خط عمودي مع قبعة — تت',       col:'#FF7A00'},
+  {l:'U',s:'u',n:'You', ex:'Umbrella', em:'☂️',mn:'مظلة',          tip:'قوس مقلوب — أوو',             col:'#FFD700'},
+  {l:'V',s:'v',n:'Vee', ex:'Violin',   em:'🎻',mn:'كمان',          tip:'شكل V مثل النصر ✌️',           col:'#A855F7'},
+  {l:'W',s:'w',n:'Double-U',ex:'Whale',em:'🐋',mn:'حوت',          tip:'جبلان مزدوجان — وو',           col:'#1ABC9C'},
+  {l:'X',s:'x',n:'Ex',  ex:'Xylophone',em:'🎵',mn:'آلة موسيقية',  tip:'تقاطع خطين — كس',             col:'#00E676'},
+  {l:'Y',s:'y',n:'Why', ex:'Yacht',    em:'⛵',mn:'يخت',           tip:'Y مثل شجرة صغيرة',            col:'#1E90FF'},
+  {l:'Z',s:'z',n:'Zee', ex:'Zebra',    em:'🦓',mn:'حمار وحشي',     tip:'ثلاثة خطوط — آخر الأبجدية!',  col:'#5352ED'},
+];
+
+/* =================== STATE =================== */
+let currentType = 'arabic';
+let currentDetail = -1;
+let progAr = new Set();
+let progEn = new Set();
+
+function safeJSON(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}}
+function isHex(c){return c&&c.startsWith('#');}
+function isDark(hex){if(!isHex(hex))return false;const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return(r*299+g*587+b*114)/1000<128;}
+
+/* =================== LOAD/SAVE =================== */
+function loadProgress(){
+  // Try to load from kidsAppAccounts (shared with dashboard)
+  const session = safeJSON('kidsAppSession');
+  if(!session) return;
+  const acc = safeJSON('kidsAppAccounts');
+  if(!acc) return;
+  const c = acc.children.find(x=>String(x.id)===String(session.id));
+  if(c && c.progress){
+    if(c.progress.arabic) progAr = new Set(c.progress.arabic);
+    if(c.progress.english) progEn = new Set(c.progress.english);
+  }
+}
+
+function saveProgress(){
+  const session = safeJSON('kidsAppSession');
+  if(!session) return;
+  let acc = safeJSON('kidsAppAccounts')||{parents:[],children:[]};
+  let i = acc.children.findIndex(x=>String(x.id)===String(session.id));
+  if(i>=0){
+    acc.children[i].progress = acc.children[i].progress||{};
+    acc.children[i].progress.arabic = [...progAr];
+    acc.children[i].progress.english = [...progEn];
+    localStorage.setItem('kidsAppAccounts',JSON.stringify(acc));
+  }
+  // Also update levelState
+  const ls = safeJSON(`levelState_${session.id}`)||{points:0,level:'DISCOVERER',certificates:{}};
+  const pts = (progAr.size + progEn.size) * 10;
+  if(!ls.lastLetterPts) ls.lastLetterPts = 0;
+  // don't double-add
+  localStorage.setItem(`levelState_${session.id}`,JSON.stringify(ls));
+}
+
+function addStarsToMain(n){
+  const session = safeJSON('kidsAppSession');
+  if(!session) return;
+  const ls = safeJSON(`levelState_${session.id}`)||{points:0,level:'DISCOVERER',certificates:{}};
+  ls.points = (ls.points||0)+n;
+  let acc = safeJSON('kidsAppAccounts')||{parents:[],children:[]};
+  let c = acc.children.find(x=>String(x.id)===String(session.id));
+  if(c){c.stars=(c.stars||0)+n; localStorage.setItem('kidsAppAccounts',JSON.stringify(acc));}
+  // check certificates
+  if(progAr.size>=AR.length) ls.certificates={...ls.certificates,arabic:true};
+  if(progEn.size>=EN.length) ls.certificates={...ls.certificates,english:true};
+  if(progAr.size>=AR.length && progEn.size>=EN.length) ls.certificates={...ls.certificates,master:true};
+  if((ls.points||0)>=100) ls.certificates={...ls.certificates,champion:true};
+  localStorage.setItem(`levelState_${session.id}`,JSON.stringify(ls));
+  // sync to API if available
+  try{if(typeof syncActivityToAPI==='function') syncActivityToAPI('arabic_letters',n,0,1,{});}catch(e){}
+}
+
+/* =================== UI =================== */
+function getCurrentData(){return currentType==='arabic'?AR:EN;}
+function getCurrentProg(){return currentType==='arabic'?progAr:progEn;}
+
+function updateHeader(){
+  const ls = getCurrentData();
+  const done = getCurrentProg();
+  document.getElementById('pageTitle').textContent = currentType==='arabic'?'الحروف العربية':'الحروف الإنجليزية';
+  document.getElementById('progressPill').textContent = done.size+' / '+ls.length;
+  renderStats();
+  const banner = document.getElementById('completeBanner');
+  if(banner) banner.style.display = done.size===ls.length?'block':'none';
+}
+
+function renderStats(){
+  const ls = getCurrentData();
+  const done = getCurrentProg();
+  const pct = Math.round(done.size/ls.length*100);
+  const box = document.getElementById('heroStats');
+  if(!box) return;
+  box.innerHTML = `
+    <div class="stat-box">
+      <div class="stat-num" style="color:var(--green)">${done.size}</div>
+      <div class="stat-lbl">تعلمتها</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:${pct}%;background:var(--green)"></div></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" style="color:var(--yellow)">${ls.length - done.size}</div>
+      <div class="stat-lbl">متبقية</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:${100-pct}%;background:rgba(255,215,0,.5)"></div></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" style="color:var(--cyan)">${pct}%</div>
+      <div class="stat-lbl">اكتمال</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:${pct}%;background:var(--cyan)"></div></div>
+    </div>
+  `;
+}
+
+function renderGrid(){
+  const ls = getCurrentData();
+  const done = getCurrentProg();
+  const grid = document.getElementById('lettersGrid');
+  if(!grid) return;
+  grid.innerHTML = ls.map((l,i)=>{
+    const isDone = done.has(i);
+    const isActive = i===currentDetail;
+    const delay = (i%10)*0.04;
+    return `<div class="letter-card ${isDone?'done':''} ${isActive?'active-card':''}" 
+                 style="--lc:${l.col};--ld:${delay}s;animation-delay:${delay}s;"
+                 onclick="openDetail(${i})">
+      ${isDone?'<div class="lc-done-mark">✓</div>':''}
+      <div class="lc-type-badge">${currentType==='arabic'?'عربي':'EN'}</div>
+      <div class="lc-emoji">${l.em}</div>
+      <div class="lc-letter">${l.l}</div>
+      <div class="lc-name">${l.n||l.ex}</div>
+    </div>`;
+  }).join('');
+}
+
+function openDetail(idx){
+  currentDetail = idx;
+  renderGrid();
+  renderDetailPanel(idx);
+  document.getElementById('detailPanel').style.display='block';
+  setTimeout(()=>document.getElementById('detailPanel').scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+function closeDetail(){
+  currentDetail = -1;
+  document.getElementById('detailPanel').style.display='none';
+  renderGrid();
+}
+
+function detailMove(dir){
+  const ls = getCurrentData();
+  const next = Math.max(0, Math.min(ls.length-1, currentDetail+dir));
+  openDetail(next);
+}
+
+function renderDetailPanel(idx){
+  const ls = getCurrentData();
+  const done = getCurrentProg();
+  const l = ls[idx];
+  const isDone = done.has(idx);
+  const isAr = currentType==='arabic';
+  const textColor = isDark(l.col)?'#fff':'#1a1a2e';
+
+  document.getElementById('detailHeaderTitle').textContent = `حرف ${l.n||l.l} — ${idx+1}/${ls.length}`;
+
+  const forms = isAr
+    ? `<div class="dl-forms">
+        <div class="dl-form-item"><span class="dl-form-lbl">منفرد</span><span class="dl-form-char" style="color:${l.col}">${l.l}</span></div>
+        <div class="dl-form-item"><span class="dl-form-lbl">البداية</span><span class="dl-form-char" style="color:${l.col}">${l.f.i}</span></div>
+        <div class="dl-form-item"><span class="dl-form-lbl">الوسط</span><span class="dl-form-char" style="color:${l.col}">${l.f.m}</span></div>
+        <div class="dl-form-item"><span class="dl-form-lbl">النهاية</span><span class="dl-form-char" style="color:${l.col}">${l.f.e}</span></div>
+       </div>`
+    : `<div class="dl-forms">
+        <div class="dl-form-item"><span class="dl-form-lbl">Capital</span><span class="dl-form-char" style="color:${l.col}">${l.l}</span></div>
+        <div class="dl-form-item"><span class="dl-form-lbl">Small</span><span class="dl-form-char" style="color:${l.col}">${l.s}</span></div>
+        <div class="dl-form-item"><span class="dl-form-lbl">Word</span><span class="dl-form-char" style="color:${l.col};font-size:16px">${l.ex}</span></div>
+       </div>`;
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="dl-letter-row">
+      <div class="dl-big" style="--dlc:${l.col}">${l.l}</div>
+      <div class="dl-info">
+        <div class="dl-name-pill" style="background:${l.col};color:${textColor}">حرف ${l.n||l.l}</div>
+        ${forms}
+      </div>
+    </div>
+    <div class="dl-example">
+      <div class="dl-ex-emoji">${l.em}</div>
+      <div>
+        <div class="dl-ex-word">${l.ex}</div>
+        <div class="dl-ex-mean">تعني: ${l.mn}</div>
+      </div>
+    </div>
+    <div class="dl-tip">💡 ${l.tip}</div>
+    <div class="dl-actions">
+      <button class="dl-btn dl-btn-listen" onclick="speakLetter('${l.l}','${isAr?'ar-SA':'en-US'}')">🔊 استمع للحرف</button>
+      <button class="dl-btn dl-btn-done" ${isDone?'disabled':''} onclick="markDone(${idx})">
+        ${isDone?'✅ تعلمته!':'⭐ تعلمت هذا الحرف!'}
+      </button>
+    </div>
+  `;
+  renderDots(idx);
+}
+
+function renderDots(activeIdx){
+  const ls = getCurrentData();
+  const done = getCurrentProg();
+  const c = document.getElementById('detailDots');
+  if(!c) return;
+  c.innerHTML = ls.map((_,i)=>{
+    let cls = 'd-dot';
+    if(i===activeIdx) cls+=' d-cur';
+    else if(done.has(i)) cls+=' d-done';
+    return `<div class="${cls}" onclick="openDetail(${i})" title="${ls[i].l}"></div>`;
+  }).join('');
+}
+
+function markDone(idx){
+  const done = getCurrentProg();
+  if(done.has(idx)) return;
+  done.add(idx);
+  saveProgress();
+  addStarsToMain(3);
+  renderGrid();
+  renderDetailPanel(idx);
+  updateHeader();
+  spawnStars(3);
+  toast('🎉 +3 نجوم! أحسنت!');
+  const ls = getCurrentData();
+  if(done.size===ls.length){
+    // ✅ Write completion flags so dashboard picks them up on return
+    const session = safeJSON('kidsAppSession');
+    if(session){
+      const flagKey = 'lettersCompleted_' + session.id;
+      const flags = safeJSON(flagKey)||{};
+      flags[currentType] = true;
+      localStorage.setItem(flagKey, JSON.stringify(flags));
+      // Also explicitly set certificates in levelState
+      const ls2 = safeJSON('levelState_'+session.id)||{points:0,level:'DISCOVERER',certificates:{}};
+      if(!ls2.certificates) ls2.certificates={};
+      ls2.certificates[currentType] = true;
+      if(currentType==='arabic') { const accT=safeJSON('kidsAppAccounts')||{parents:[],children:[]}; const cT=accT.children.find(x=>String(x.id)===String(session.id)); if(cT){cT.progress=cT.progress||{};cT.progress.arabic=[...progAr];localStorage.setItem('kidsAppAccounts',JSON.stringify(accT));} }
+      if(currentType==='english') { const accT=safeJSON('kidsAppAccounts')||{parents:[],children:[]}; const cT=accT.children.find(x=>String(x.id)===String(session.id)); if(cT){cT.progress=cT.progress||{};cT.progress.english=[...progEn];localStorage.setItem('kidsAppAccounts',JSON.stringify(accT));} }
+      localStorage.setItem('levelState_'+session.id, JSON.stringify(ls2));
+    }
+    setTimeout(()=>{
+      confetti();
+      document.getElementById('completeBanner').style.display='block';
+      document.getElementById('completeBanner').scrollIntoView({behavior:'smooth'});
+      toast('🪐 مبروك! أكملت كل الحروف! فتحت كوكباً جديداً! 🎉');
+    },800);
+  } else if(idx<ls.length-1){
+    setTimeout(()=>detailMove(1),900);
+  }
+}
+
+function speakLetter(text,lang){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=lang;u.rate=0.65;u.pitch=1.1;
+  speechSynthesis.speak(u);
+}
+
+function switchType(type,btn){
+  currentType=type;
+  currentDetail=-1;
+  document.querySelectorAll('.type-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('detailPanel').style.display='none';
+  updateHeader();
+  renderGrid();
+}
+
+function goBack(){
+  history.back();
+  setTimeout(()=>{window.location.href='../dashboard.html';},200);
+}
+
+/* =================== EFFECTS =================== */
+function spawnStars(n){
+  for(let i=0;i<n;i++) setTimeout(()=>{
+    const el=document.createElement('div');el.className='star-fx';el.textContent='⭐';
+    const tx=(Math.random()-.5)*100;el.style.cssText=`left:${40+Math.random()*20}vw;top:60vh;--tx:${tx}px;--tx2:${tx*.5}px;`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),2000);
+  },i*180);
+}
+
+function toast(msg){
+  document.querySelectorAll('.toast-bar').forEach(t=>t.remove());
+  const t=document.createElement('div');t.className='toast-bar';t.textContent=msg;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2800);
+}
+
+function confetti(){
+  const cols=['#FF4757','#FF7A00','#FFD700','#00E676','#1E90FF','#A855F7','#FF3D8E'];
+  for(let i=0;i<70;i++) setTimeout(()=>{
+    const el=document.createElement('div');el.className='confetti-p';
+    el.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};--cfd:${2+Math.random()*2}s;animation-delay:${Math.random()*.5}s;width:${6+Math.random()*9}px;height:${6+Math.random()*9}px;border-radius:${Math.random()>.5?'50%':'3px'};`;
+    document.body.appendChild(el);setTimeout(()=>el.remove(),5000);
+  },i*45);
+}
+
+function initStars(){
+  const c=document.getElementById('starsCanvas');if(!c)return;
+  const ctx=c.getContext('2d');let W,H,stars=[];
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}resize();
+  window.addEventListener('resize',resize);
+  for(let i=0;i<140;i++) stars.push({x:Math.random()*9999,y:Math.random()*9999,r:Math.random()*1.4+.3,a:Math.random(),da:(Math.random()*.007+.002)*(Math.random()<.5?1:-1)});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da*=-1;ctx.globalAlpha=Math.max(0,Math.min(1,s.a));ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);ctx.fill();});
+    ctx.globalAlpha=1;requestAnimationFrame(draw);
+  }draw();
+}
+
+/* =================== INIT =================== */
+window.addEventListener('DOMContentLoaded',()=>{
+  // Check if URL has type param
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('type')==='english'){
+    currentType='english';
+    document.querySelectorAll('.type-tab').forEach((b,i)=>{b.classList.remove('active');if(i===1)b.classList.add('active');});
+  }
+  loadProgress();
+  updateHeader();
+  renderGrid();
+  initStars();
+});
+</script>
+</body>
+</html>
