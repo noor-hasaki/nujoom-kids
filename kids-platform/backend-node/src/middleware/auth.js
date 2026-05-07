@@ -1,6 +1,7 @@
 // src/middleware/auth.js — التحقق من JWT والصلاحيات
 
 const jwt    = require('jsonwebtoken');
+const crypto = require('crypto');
 const { getOne } = require('../database/db');
 
 // ── التحقق من Access Token (ولي الأمر أو الطفل) ───────────────
@@ -85,9 +86,22 @@ function requireChild(req, res, next) {
 
 // ── التحقق من Internal Admin API Key ──────────────────────────
 function requireAdminKey(req, res, next) {
-    const key = req.headers['x-admin-key'];
+    const key    = req.headers['x-admin-key'] || req.cookies?.admin_key;
+    const secret = process.env.INTERNAL_ADMIN_API_KEY;
 
-    if (!key || key !== process.env.INTERNAL_ADMIN_API_KEY) {
+    let valid = false;
+    if (key && secret) {
+        try {
+            const keyBuf    = Buffer.from(key);
+            const secretBuf = Buffer.from(secret);
+            valid = keyBuf.length === secretBuf.length &&
+                    crypto.timingSafeEqual(keyBuf, secretBuf);
+        } catch {
+            valid = false;
+        }
+    }
+
+    if (!valid) {
         return res.status(403).json({
             success: false,
             error: 'مفتاح Admin غير صالح',

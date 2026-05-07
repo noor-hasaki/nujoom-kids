@@ -21,6 +21,15 @@ async function initDB() {
     const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
     db.run(schema);
 
+    // Migrations for existing databases — safe to re-run (errors = column already exists)
+    const migrations = [
+        'ALTER TABLE children ADD COLUMN failed_pin_attempts INTEGER NOT NULL DEFAULT 0',
+        'ALTER TABLE children ADD COLUMN locked_until INTEGER',
+    ];
+    for (const mig of migrations) {
+        try { db.run(mig); } catch (_) {}
+    }
+
     // حفظ تلقائي كل 5 ثوانٍ
     setInterval(saveDB, 5000);
 

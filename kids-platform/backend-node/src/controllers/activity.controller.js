@@ -151,6 +151,15 @@ function saveDrawing(req, res) {
             return res.status(400).json({ success: false, error: 'بيانات الرسمة مطلوبة', code: 'NO_IMAGE_DATA' });
         }
 
+        const validPrefix = /^data:image\/(png|jpeg|webp);base64,/;
+        if (!validPrefix.test(imageData)) {
+            return res.status(400).json({ success: false, error: 'صيغة الرسمة غير صالحة', code: 'INVALID_IMAGE_FORMAT' });
+        }
+        // ~2MB limit on the base64 string (~1.5MB decoded)
+        if (imageData.length > 2 * 1024 * 1024) {
+            return res.status(400).json({ success: false, error: 'حجم الرسمة أكبر من المسموح به (2MB)', code: 'IMAGE_TOO_LARGE' });
+        }
+
         // حد أقصى 50 رسمة للطفل
         const count = getOne('SELECT COUNT(*) AS cnt FROM drawings WHERE child_id = ?', [childId]);
         if (count.cnt >= 50) {

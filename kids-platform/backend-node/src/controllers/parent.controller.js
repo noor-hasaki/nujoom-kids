@@ -68,7 +68,7 @@ function getMyChildren(req, res) {
 
     const children = getAll(
         `SELECT
-            c.id, c.name, c.age, c.gender, c.avatar_id, c.join_date, c.is_frozen,
+            c.id, c.name, c.age, c.gender, c.avatar_id, c.join_date, c.is_frozen, c.locked_until,
             COALESCE(cp.total_stars,    0) AS total_stars,
             COALESCE(cp.stories_read,   0) AS stories_read,
             COALESCE(cp.words_learned,  0) AS words_learned,

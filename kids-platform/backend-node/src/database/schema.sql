@@ -23,12 +23,14 @@ CREATE TABLE IF NOT EXISTS children (
     name        TEXT NOT NULL,
     age         INTEGER NOT NULL CHECK(age >= 3 AND age <= 12),
     gender      TEXT CHECK(gender IN ('boy', 'girl')) NOT NULL,
-    pin         TEXT NOT NULL,          -- bcrypt hash لـ PIN من 4 أرقام
-    avatar_id   INTEGER DEFAULT 1,
-    join_date   TEXT DEFAULT (date('now')),
-    is_frozen   INTEGER DEFAULT 0,
-    created_at  TEXT DEFAULT (datetime('now')),
-    updated_at  TEXT DEFAULT (datetime('now'))
+    pin                 TEXT NOT NULL,  -- bcrypt hash لـ PIN من 4 أرقام
+    avatar_id           INTEGER DEFAULT 1,
+    join_date           TEXT DEFAULT (date('now')),
+    is_frozen           INTEGER DEFAULT 0,
+    failed_pin_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until        INTEGER,        -- unix ms, NULL = unlocked
+    created_at          TEXT DEFAULT (datetime('now')),
+    updated_at          TEXT DEFAULT (datetime('now'))
 );
 
 -- ─── جدول تقدم الطفل ─────────────────────────────────────────
@@ -99,6 +101,17 @@ CREATE TABLE IF NOT EXISTS drawings (
     title       TEXT DEFAULT 'رسمة جديدة',
     image_data  TEXT NOT NULL,          -- Base64 PNG
     created_at  TEXT DEFAULT (datetime('now'))
+);
+
+-- ─── جدول سجل أعمال الأدمين ──────────────────────────────────
+CREATE TABLE IF NOT EXISTS admin_audit (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts          INTEGER NOT NULL,
+    ip          TEXT,
+    action      TEXT NOT NULL,
+    target_type TEXT,
+    target_id   INTEGER,
+    details     TEXT
 );
 
 -- ─── Indexes للأداء ──────────────────────────────────────────

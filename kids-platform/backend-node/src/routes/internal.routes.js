@@ -7,6 +7,15 @@ const { getOne, getAll, run, saveDB, transaction } = require('../database/db');
 // جميع المسارات هنا محمية بـ Admin API Key
 router.use(requireAdminKey);
 
+function logAudit(req, action, targetType, targetId, details) {
+    try {
+        run(
+            'INSERT INTO admin_audit (ts, ip, action, target_type, target_id, details) VALUES (?, ?, ?, ?, ?, ?)',
+            [Date.now(), req.ip, action, targetType || null, targetId || null, JSON.stringify(details || {})]
+        );
+    } catch (e) { console.error('audit log error:', e.message); }
+}
+
 // ── GET /api/internal/parents ─────────────────────────────────
 router.get('/parents', (req, res) => {
     const parents = getAll(
@@ -81,6 +90,7 @@ router.put('/parents/:id', (req, res) => {
     updates.push('updated_at = datetime("now")');
     params.push(req.params.id);
     run(`UPDATE parents SET ${updates.join(', ')} WHERE id = ?`, params);
+    logAudit(req, 'update_parent', 'parent', req.params.id, { fields: Object.keys(req.body) });
     res.json({ success: true, message: 'تم التحديث' });
 });
 
@@ -98,6 +108,7 @@ router.put('/children/:id', (req, res) => {
     updates.push('updated_at = datetime("now")');
     params.push(req.params.id);
     run(`UPDATE children SET ${updates.join(', ')} WHERE id = ?`, params);
+    logAudit(req, 'update_child', 'child', req.params.id, { fields: Object.keys(req.body) });
     res.json({ success: true, message: 'تم التحديث' });
 });
 
@@ -138,13 +149,14 @@ router.delete('/parents/:id', (req, res) => {
             ? ` وأطفاله: ${childNames}`
             : ' (لا يوجد أطفال)';
 
+        logAudit(req, 'delete_parent', 'parent', parentId, { name: parent.name, children_count: children.length });
         res.json({
             success: true,
             message: `✅ تم حذف ولي الأمر "${parent.name}"${childInfo}. المحذوفات: ${children.length} طفل وجميع إحصائياتهم.`
         });
     } catch (err) {
         console.error('deleteParent (admin) error:', err);
-        res.status(500).json({ success: false, error: 'خطأ أثناء الحذف: ' + err.message, code: 'DELETE_ERROR' });
+        res.status(500).json({ success: false, error: 'خطأ أثناء الحذف', code: 'DELETE_ERROR' });
     }
 });
 
@@ -167,34 +179,45 @@ router.delete('/children/:id', (req, res) => {
             run('DELETE FROM children           WHERE id = ?', [childId]);
         });
 
+        logAudit(req, 'delete_child', 'child', childId, { name: child.name });
         res.json({ success: true, message: `✅ تم حذف الطفل "${child.name}" وجميع بياناته وإحصائياته` });
     } catch (err) {
         console.error('deleteChild (admin) error:', err);
-        res.status(500).json({ success: false, error: 'خطأ أثناء الحذف: ' + err.message, code: 'DELETE_ERROR' });
+        res.status(500).json({ success: false, error: 'خطأ أثناء الحذف', code: 'DELETE_ERROR' });
     }
 });
 
 // ── PUT /api/internal/parents/:id/freeze ────────────────────
 router.put('/parents/:id/freeze', (req, res) => {
     run('UPDATE parents SET is_frozen = 1 WHERE id = ?', [req.params.id]);
+    logAudit(req, 'freeze_parent', 'parent', req.params.id, {});
     res.json({ success: true, message: 'تم تجميد الحساب' });
 });
 
 // ── PUT /api/internal/parents/:id/unfreeze ──────────────────
 router.put('/parents/:id/unfreeze', (req, res) => {
     run('UPDATE parents SET is_frozen = 0 WHERE id = ?', [req.params.id]);
+    logAudit(req, 'unfreeze_parent', 'parent', req.params.id, {});
     res.json({ success: true, message: 'تم رفع التجميد' });
 });
 
 // ── PUT /api/internal/children/:id/freeze ───────────────────
 router.put('/children/:id/freeze', (req, res) => {
     run('UPDATE children SET is_frozen = 1 WHERE id = ?', [req.params.id]);
+    logAudit(req, 'freeze_child', 'child', req.params.id, {});
     res.json({ success: true, message: 'تم تجميد حساب الطفل' });
 });
 
 router.put('/children/:id/unfreeze', (req, res) => {
     run('UPDATE children SET is_frozen = 0 WHERE id = ?', [req.params.id]);
+    logAudit(req, 'unfreeze_child', 'child', req.params.id, {});
     res.json({ success: true, message: 'تم رفع تجميد الطفل' });
+});
+
+// ── GET /api/internal/audit ──────────────────────────────────
+router.get('/audit', (req, res) => {
+    const logs = getAll('SELECT * FROM admin_audit ORDER BY ts DESC LIMIT 200');
+    res.json({ success: true, data: logs });
 });
 
 module.exports = router;

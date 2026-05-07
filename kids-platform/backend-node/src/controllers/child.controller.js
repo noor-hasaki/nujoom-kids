@@ -210,6 +210,18 @@ function getChildProgress(req, res) {
 // ══════════════════════════════════════════════════════════════
 function getChildActivities(req, res) {
     const childId = parseInt(req.params.id);
+
+    if (req.user.type === 'child' && req.user.id !== childId) {
+        return res.status(403).json({ success: false, error: 'غير مصرح', code: 'FORBIDDEN' });
+    }
+    if (req.user.type === 'parent') {
+        const ownership = getOne(
+            'SELECT id FROM parent_permissions WHERE parent_id = ? AND child_id = ?',
+            [req.user.id, childId]
+        );
+        if (!ownership) return res.status(403).json({ success: false, error: 'ليس طفلك', code: 'NO_ACCESS' });
+    }
+
     const { type, limit = 20, offset = 0 } = req.query;
 
     let sql = `SELECT id, activity_type, stars_earned, score, duration_min, metadata, completed_at
@@ -235,6 +247,17 @@ function getChildActivities(req, res) {
 function getChildAchievements(req, res) {
     const childId = parseInt(req.params.id);
 
+    if (req.user.type === 'child' && req.user.id !== childId) {
+        return res.status(403).json({ success: false, error: 'غير مصرح', code: 'FORBIDDEN' });
+    }
+    if (req.user.type === 'parent') {
+        const ownership = getOne(
+            'SELECT id FROM parent_permissions WHERE parent_id = ? AND child_id = ?',
+            [req.user.id, childId]
+        );
+        if (!ownership) return res.status(403).json({ success: false, error: 'ليس طفلك', code: 'NO_ACCESS' });
+    }
+
     const achievements = getAll(
         'SELECT id, achievement_id, earned_at FROM achievements WHERE child_id = ? ORDER BY earned_at DESC',
         [childId]
@@ -248,7 +271,16 @@ function getChildAchievements(req, res) {
 // إحصائيات كاملة لعرضها في لوحة الوالدين
 // ══════════════════════════════════════════════════════════════
 function getChildStatsSummary(req, res) {
-    const childId = parseInt(req.params.id);
+    const childId  = parseInt(req.params.id);
+    const parentId = req.user.id;
+
+    const ownership = getOne(
+        'SELECT id FROM parent_permissions WHERE parent_id = ? AND child_id = ?',
+        [parentId, childId]
+    );
+    if (!ownership) {
+        return res.status(403).json({ success: false, error: 'ليس طفلك', code: 'NO_ACCESS' });
+    }
 
     const progress = getOne('SELECT * FROM child_progress WHERE child_id = ?', [childId]);
 
@@ -346,6 +378,25 @@ function getChildStatsSummary(req, res) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// POST /api/children/:id/unlock — إعادة تعيين قفل PIN (ولي الأمر فقط)
+// ══════════════════════════════════════════════════════════════
+function unlockChild(req, res) {
+    const childId  = parseInt(req.params.id);
+    const parentId = req.user.id;
+
+    const ownership = getOne(
+        'SELECT id FROM parent_permissions WHERE parent_id = ? AND child_id = ?',
+        [parentId, childId]
+    );
+    if (!ownership) {
+        return res.status(403).json({ success: false, error: 'ليس طفلك', code: 'NO_ACCESS' });
+    }
+
+    run('UPDATE children SET failed_pin_attempts = 0, locked_until = NULL WHERE id = ?', [childId]);
+    return res.json({ success: true, message: 'تم إعادة تعيين قفل الحساب' });
+}
+
+// ══════════════════════════════════════════════════════════════
 // DELETE /api/children/:id  — حذف طفل (ولي الأمر فقط)
 // ══════════════════════════════════════════════════════════════
 function deleteChild(req, res) {
@@ -387,6 +438,7 @@ module.exports = {
     createChild,
     getChild,
     updateChild,
+    unlockChild,
     deleteChild,
     getChildProgress,
     getChildActivities,
