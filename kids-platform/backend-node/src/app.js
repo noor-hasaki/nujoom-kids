@@ -10,6 +10,9 @@ const fs       = require('fs');
 
 const app = express();
 
+// Trust nginx reverse proxy
+app.set('trust proxy', 1);
+
 // ── الـ Middleware الأساسية ────────────────────────────────────
 app.use(helmet({
     contentSecurityPolicy: {

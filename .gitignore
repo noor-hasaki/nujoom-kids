@@ -1,32 +1,20 @@
 # Dependencies
-node_modules/
+**/node_modules/
 
-# Environment & secrets
-.env
-.env.local
-.env.production
+# Environment files (secrets — never commit)
+**/.env
+**/.env.production
+**/.env.local
 
-# SQLite databases
-*.db
-*.db-journal
-*.db-wal
-
-# OS junk
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Database
+**/database.db
 
 # Logs
 *.log
-npm-debug.log*
 
-# Build artifacts
-dist/
-build/
+# OS
+.DS_Store
+*:Zone.Identifier
+
+# Docker build artifacts
+kids-platform/backend-node/database.db
