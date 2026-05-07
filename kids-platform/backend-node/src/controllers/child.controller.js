@@ -434,6 +434,67 @@ function deleteChild(req, res) {
     }
 }
 
+// ══════════════════════════════════════════════════════════════
+// GET /api/children/:id/ai-chats — ولي الأمر فقط
+// يُرجع محادثات الطفل مع نجوم مجمَّعة حسب الجلسة
+// ══════════════════════════════════════════════════════════════
+function getChildAiChats(req, res) {
+    const childId  = parseInt(req.params.id);
+    const parentId = req.user.id;
+
+    const ownership = getOne(
+        'SELECT id FROM parent_permissions WHERE parent_id = ? AND child_id = ?',
+        [parentId, childId]
+    );
+    if (!ownership) {
+        return res.status(403).json({ success: false, error: 'ليس طفلك', code: 'NO_ACCESS' });
+    }
+
+    const { limit = 20, offset = 0 } = req.query;
+
+    // Fetch messages for the most recent sessions
+    const sessionIds = getAll(
+        `SELECT DISTINCT session_id, MIN(created_at) AS started_at
+         FROM ai_chats WHERE child_id = ?
+         GROUP BY session_id
+         ORDER BY started_at DESC
+         LIMIT ? OFFSET ?`,
+        [childId, parseInt(limit), parseInt(offset)]
+    );
+
+    const sessions = sessionIds.map(s => {
+        const messages = getAll(
+            `SELECT role, content, created_at
+             FROM ai_chats WHERE child_id = ? AND session_id = ?
+             ORDER BY created_at ASC`,
+            [childId, s.session_id]
+        );
+        return {
+            sessionId:  s.session_id,
+            startedAt:  s.started_at,
+            messages
+        };
+    });
+
+    const totalSessions = getOne(
+        'SELECT COUNT(DISTINCT session_id) AS cnt FROM ai_chats WHERE child_id = ?',
+        [childId]
+    );
+    const totalMessages = getOne(
+        'SELECT COUNT(*) AS cnt FROM ai_chats WHERE child_id = ?',
+        [childId]
+    );
+
+    return res.json({
+        success: true,
+        data: {
+            sessions,
+            totalSessions: totalSessions?.cnt || 0,
+            totalMessages: totalMessages?.cnt || 0
+        }
+    });
+}
+
 module.exports = {
     createChild,
     getChild,
@@ -443,5 +504,6 @@ module.exports = {
     getChildProgress,
     getChildActivities,
     getChildAchievements,
-    getChildStatsSummary
+    getChildStatsSummary,
+    getChildAiChats
 };

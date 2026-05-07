@@ -15,6 +15,9 @@ router.get('/:id/activities',    authenticate, ctrl.getChildActivities);
 router.get('/:id/achievements',  authenticate, ctrl.getChildAchievements);
 router.get('/:id/stats/summary', requireParent, ctrl.getChildStatsSummary);
 
+// محادثات AI — ولي أمر فقط
+router.get('/:id/ai-chats', requireParent, ctrl.getChildAiChats);
+
 // إعادة تعيين قفل PIN — ولي أمر فقط
 router.post('/:id/unlock', requireParent, ctrl.unlockChild);
 

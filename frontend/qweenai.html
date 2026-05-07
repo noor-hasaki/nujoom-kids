@@ -620,6 +620,8 @@ let recognition = null;
 let isListening = false;
 let msgCount = 1;
 let isSpeaking = false;
+// Unique session ID for this page load — groups all messages into one conversation
+const SESSION_ID = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 // =================== INIT ===================
 window.onload = function() {
@@ -704,6 +706,7 @@ async function sendMessage(text) {
         ...(token && { 'Authorization': `Bearer ${token}` })
       },
       body: JSON.stringify({
+        sessionId: SESSION_ID,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...chatHistory.slice(-10)

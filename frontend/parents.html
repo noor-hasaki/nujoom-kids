@@ -1090,91 +1090,93 @@ function doLogout(){ Auth.logout(); }
 function parentLogout(){ Auth.logout(); }
 
 // ════════════ PARENTS — AI CONVERSATIONS ════════════════════
-function aiInitSelect() {
-  const acc = safeJSON('kidsAppAccounts') || {children:[]};
+async function aiInitSelect() {
   const sel = document.getElementById('aiSel');
   if (!sel) return;
   sel.innerHTML = '<option value="">— اختر طفلاً —</option>';
-  (acc.children || []).forEach(c => {
-    const o = document.createElement('option');
-    o.value = c.name;  // we search by name
-    o.dataset.id = c.id || '';
-    o.textContent = c.name;
-    sel.appendChild(o);
-  });
-  if ((acc.children||[]).length === 1) { sel.value = acc.children[0].name; aiLoad(); }
+
+  try {
+    const res = await Parents.getMyChildren();
+    const children = res.success ? res.data : [];
+    children.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.name;
+      sel.appendChild(o);
+    });
+    if (children.length === 1) { sel.value = children[0].id; aiLoad(); }
+  } catch(e) {
+    console.error('aiInitSelect error:', e);
+  }
 }
 
-function aiGetSessions(childName, childId) {
-  // Try all possible keys
-  const keysToTry = [];
-  if (childName) keysToTry.push(`nujoom_chats_${childName}`);
-  if (childId)   keysToTry.push(`nujoom_chats_id_${childId}`);
-  keysToTry.push('nujoom_chats_default');
-
-  const merged = new Map();
-  keysToTry.forEach(k => {
-    const data = safeJSON(k) || [];
-    data.forEach(s => { if (!merged.has(s.id)) merged.set(s.id, s); });
-  });
-  return Array.from(merged.values()).sort((a,b) => b.id - a.id);
-}
-
-function aiLoad() {
-  const sel  = document.getElementById('aiSel');
-  const list = document.getElementById('aiList');
+async function aiLoad() {
+  const sel   = document.getElementById('aiSel');
+  const list  = document.getElementById('aiList');
   const stats = document.getElementById('aiStats');
   if (!sel || !list) return;
 
-  const childName = sel.value;
-  const childId   = sel.selectedOptions[0]?.dataset.id || '';
+  const childId   = sel.value;
+  const childName = sel.selectedOptions[0]?.textContent || '';
 
-  if (!childName) {
+  if (!childId) {
     list.innerHTML = '<div class="ai-empty"><span class="ai-empty-icon">👆</span><h3>اختر طفلاً</h3><p>اختر اسم الطفل لعرض محادثاته مع نجوم</p></div>';
     stats.style.display = 'none';
     return;
   }
 
-  const sessions = aiGetSessions(childName, childId);
+  list.innerHTML = '<div class="ai-empty"><span class="ai-empty-icon">⏳</span><h3>جاري التحميل...</h3></div>';
+  stats.style.display = 'none';
 
-  if (sessions.length === 0) {
-    list.innerHTML = `<div class="ai-empty"><span class="ai-empty-icon">💬</span><h3>لا توجد محادثات بعد</h3><p>عندما يتحدث ${childName} مع نجوم ستظهر المحادثات هنا تلقائياً</p></div>`;
-    stats.style.display = 'none';
-    return;
-  }
+  try {
+    const res = await apiRequest(`/children/${childId}/ai-chats?limit=30`);
+    if (!res.success) throw new Error(res.error);
 
-  // Stats
-  const totalMsgs = sessions.reduce((s,x) => s + x.messages.length, 0);
-  const totalQ    = sessions.reduce((s,x) => s + x.messages.filter(m=>m.role==='user').length, 0);
-  document.getElementById('aiStatSessions').textContent  = sessions.length;
-  document.getElementById('aiStatMsgs').textContent      = totalMsgs;
-  document.getElementById('aiStatQuestions').textContent = totalQ;
-  stats.style.display = 'grid';
+    const { sessions, totalSessions, totalMessages } = res.data;
+    const totalQ = sessions.reduce((s,x) => s + x.messages.filter(m=>m.role==='user').length, 0);
 
-  list.innerHTML = '';
-  sessions.forEach((session, idx) => {
-    const qCount = session.messages.filter(m => m.role === 'user').length;
-    const card = document.createElement('div');
-    card.className = 'ai-session-card' + (idx === 0 ? ' open' : '');
-    card.innerHTML = `
-      <div class="ai-sess-hdr" onclick="this.parentElement.classList.toggle('open')">
-        <div class="ai-sess-ico">⭐</div>
-        <div class="ai-sess-info">
-          <h4>${session.date} — ${session.time}</h4>
-          <p>${qCount} سؤال من ${session.childName || childName}</p>
+    if (sessions.length === 0) {
+      list.innerHTML = `<div class="ai-empty"><span class="ai-empty-icon">💬</span><h3>لا توجد محادثات بعد</h3><p>عندما يتحدث ${childName} مع نجوم ستظهر المحادثات هنا تلقائياً</p></div>`;
+      return;
+    }
+
+    document.getElementById('aiStatSessions').textContent  = totalSessions;
+    document.getElementById('aiStatMsgs').textContent      = totalMessages;
+    document.getElementById('aiStatQuestions').textContent = totalQ;
+    stats.style.display = 'grid';
+
+    list.innerHTML = '';
+    sessions.forEach((session, idx) => {
+      const qCount = session.messages.filter(m => m.role === 'user').length;
+      const dt = new Date(session.startedAt);
+      const dateStr = dt.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+      const timeStr = dt.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+
+      const card = document.createElement('div');
+      card.className = 'ai-session-card' + (idx === 0 ? ' open' : '');
+      card.innerHTML = `
+        <div class="ai-sess-hdr" onclick="this.parentElement.classList.toggle('open')">
+          <div class="ai-sess-ico">⭐</div>
+          <div class="ai-sess-info">
+            <h4>${dateStr} — ${timeStr}</h4>
+            <p>${qCount} سؤال من ${childName}</p>
+          </div>
+          <span class="ai-sess-badge">${session.messages.length} رسالة</span>
+          <i class="fas fa-chevron-down ai-sess-arr"></i>
         </div>
-        <span class="ai-sess-badge">${session.messages.length} رسالة</span>
-        <i class="fas fa-chevron-down ai-sess-arr"></i>
-      </div>
-      <div class="ai-msgs-panel">
+        <div class="ai-msgs-panel">
 ${session.messages.map(m => `
-  <div class="ai-msg-row ${m.role === 'nujoom' ? 'ai-r' : 'user-r'}">
-    <div class="ai-msg-av">${m.role === 'nujoom' ? '⭐' : '🧒'}</div>
-    <div class="ai-msg-bbl">${(m.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
+  <div class="ai-msg-row ${m.role === 'assistant' ? 'ai-r' : 'user-r'}">
+    <div class="ai-msg-av">${m.role === 'assistant' ? '⭐' : '🧒'}</div>
+    <div class="ai-msg-bbl">${m.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
   </div>`).join('')}
-      </div>`;
-    list.appendChild(card);
-  });
+        </div>`;
+      list.appendChild(card);
+    });
+
+  } catch(e) {
+    list.innerHTML = `<div class="ai-empty"><span class="ai-empty-icon">⚠️</span><h3>تعذّر التحميل</h3><p>${e.message}</p></div>`;
+  }
 }
 
 // AI view ready

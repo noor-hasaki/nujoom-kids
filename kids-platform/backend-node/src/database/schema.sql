@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     child_id        INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE,
     activity_type   TEXT NOT NULL CHECK(activity_type IN (
                         'arabic_letters','english_letters','stories',
-                        'games','math','vocabulary','drawing','certificate'
+                        'games','math','vocabulary','drawing','certificate','islamic'
                     )),
     stars_earned    INTEGER DEFAULT 0,
     score           INTEGER DEFAULT 0,
@@ -114,6 +114,16 @@ CREATE TABLE IF NOT EXISTS admin_audit (
     details     TEXT
 );
 
+-- ─── جدول محادثات AI ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_chats (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    child_id    INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+    session_id  TEXT NOT NULL,
+    role        TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+    content     TEXT NOT NULL,
+    created_at  TEXT DEFAULT (datetime('now'))
+);
+
 -- ─── Indexes للأداء ──────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_children_parent    ON children(parent_id);
 CREATE INDEX IF NOT EXISTS idx_activity_child     ON activity_logs(child_id);
@@ -121,3 +131,5 @@ CREATE INDEX IF NOT EXISTS idx_activity_type      ON activity_logs(activity_type
 CREATE INDEX IF NOT EXISTS idx_achievements_child ON achievements(child_id);
 CREATE INDEX IF NOT EXISTS idx_refresh_token      ON refresh_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_drawings_child     ON drawings(child_id);
+CREATE INDEX IF NOT EXISTS idx_ai_chats_child     ON ai_chats(child_id);
+CREATE INDEX IF NOT EXISTS idx_ai_chats_session   ON ai_chats(session_id);

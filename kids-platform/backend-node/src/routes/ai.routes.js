@@ -4,6 +4,7 @@ const express   = require('express');
 const rateLimit = require('express-rate-limit');
 const router    = express.Router();
 const { authenticate } = require('../middleware/auth');
+const { run }   = require('../database/db');
 
 const GROQ_URL      = 'https://api.groq.com/openai/v1/chat/completions';
 const AI_PROXY_URL  = process.env.AI_PROXY_URL || GROQ_URL;
@@ -42,7 +43,7 @@ router.post('/chat', aiLimiter, authenticate, async (req, res) => {
             return res.status(500).json({ success: false, error: 'AI not configured on server' });
         }
 
-        const { messages } = req.body;
+        const { messages, sessionId } = req.body;
 
         if (!Array.isArray(messages) || messages.length === 0 || messages.length > MAX_MESSAGES) {
             return res.status(400).json({ success: false, error: 'messages مطلوب كمصفوفة (1-20 رسالة)' });
@@ -89,6 +90,28 @@ router.post('/chat', aiLimiter, authenticate, async (req, res) => {
         }
 
         const data = await groqRes.json();
+        const reply = data.choices?.[0]?.message?.content;
+
+        // Save to DB only when a child is chatting (not parent preview)
+        if (req.user?.type === 'child' && sessionId && reply) {
+            const sid = String(sessionId).slice(0, 64);
+            const userMsg = cleaned[cleaned.length - 1];
+            try {
+                if (userMsg) {
+                    run(
+                        'INSERT INTO ai_chats (child_id, session_id, role, content) VALUES (?, ?, ?, ?)',
+                        [req.user.id, sid, 'user', userMsg.content]
+                    );
+                }
+                run(
+                    'INSERT INTO ai_chats (child_id, session_id, role, content) VALUES (?, ?, ?, ?)',
+                    [req.user.id, sid, 'assistant', reply]
+                );
+            } catch (dbErr) {
+                console.error('ai_chats save error:', dbErr.message);
+            }
+        }
+
         return res.json({ success: true, data });
 
     } catch (e) {
