@@ -99,7 +99,7 @@ const activityRules = [
     body('activityType')
         .isIn([
             'arabic_letters', 'english_letters', 'stories',
-            'games', 'math', 'vocabulary', 'drawing', 'certificate'
+            'games', 'math', 'vocabulary', 'drawing', 'certificate', 'islamic'
         ]).withMessage('نوع النشاط غير صالح'),
 
     body('starsEarned')

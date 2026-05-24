@@ -30,6 +30,37 @@ async function initDB() {
         try { db.run(mig); } catch (_) {}
     }
 
+    // M2: Add 'islamic' to activity_logs CHECK constraint if not already there
+    try {
+        const _stmt = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='activity_logs'");
+        let _rowSql = null;
+        if (_stmt.step()) _rowSql = _stmt.getAsObject().sql;
+        _stmt.free();
+        if (_rowSql && !_rowSql.includes("'islamic'")) {
+            db.run(`CREATE TABLE activity_logs_v2 (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                child_id      INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+                activity_type TEXT NOT NULL CHECK(activity_type IN (
+                                  'arabic_letters','english_letters','stories',
+                                  'games','math','vocabulary','drawing','certificate','islamic'
+                              )),
+                stars_earned  INTEGER DEFAULT 0,
+                score         INTEGER DEFAULT 0,
+                duration_min  INTEGER DEFAULT 0,
+                metadata      TEXT DEFAULT '{}',
+                completed_at  TEXT DEFAULT (datetime('now'))
+            )`);
+            db.run('INSERT INTO activity_logs_v2 SELECT * FROM activity_logs');
+            db.run('DROP TABLE activity_logs');
+            db.run('ALTER TABLE activity_logs_v2 RENAME TO activity_logs');
+            db.run('CREATE INDEX IF NOT EXISTS idx_activity_child ON activity_logs(child_id)');
+            db.run('CREATE INDEX IF NOT EXISTS idx_activity_type  ON activity_logs(activity_type)');
+            console.log("✅ Migration M2: activity_logs constraint updated ('islamic' added)");
+        }
+    } catch (e) {
+        console.error('Migration M2 error:', e.message);
+    }
+
     // حفظ تلقائي كل 5 ثوانٍ
     setInterval(saveDB, 5000);
 
