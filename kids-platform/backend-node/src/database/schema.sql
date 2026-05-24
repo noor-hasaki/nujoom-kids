@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     child_id        INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE,
     activity_type   TEXT NOT NULL CHECK(activity_type IN (
                         'arabic_letters','english_letters','stories',
-                        'games','math','vocabulary','drawing','certificate'
+                        'games','math','vocabulary','drawing','certificate','islamic'
                     )),
     stars_earned    INTEGER DEFAULT 0,
     score           INTEGER DEFAULT 0,
