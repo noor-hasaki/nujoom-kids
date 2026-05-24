@@ -1089,63 +1089,93 @@ function toast(msg){document.querySelectorAll('.toast-bar').forEach(t=>t.remove(
 function doLogout(){ Auth.logout(); }
 function parentLogout(){ Auth.logout(); }
 
-// ════════════ PARENTS — AI CONVERSATIONS ════════════════════
-function aiInitSelect() {
-  const acc = safeJSON('kidsAppAccounts') || {children:[]};
+// ════════════ PARENTS — AI CONVERSATIONS (API-driven) ════════════════════
+let _aiChildrenCache = null;
+
+async function aiInitSelect() {
   const sel = document.getElementById('aiSel');
   if (!sel) return;
   sel.innerHTML = '<option value="">— اختر طفلاً —</option>';
-  (acc.children || []).forEach(c => {
+
+  let children = _aiChildrenCache;
+  if (!children) {
+    try {
+      const res = await Parents.getMyChildren();
+      if (res && res.success && Array.isArray(res.data)) {
+        children = res.data;
+        _aiChildrenCache = children;
+      }
+    } catch (e) {
+      console.warn('Could not load children for AI chats:', e);
+      children = [];
+    }
+  }
+  children = children || [];
+
+  children.forEach(c => {
     const o = document.createElement('option');
-    o.value = c.name;  // we search by name
-    o.dataset.id = c.id || '';
+    o.value = String(c.id);
+    o.dataset.id = String(c.id);
     o.textContent = c.name;
     sel.appendChild(o);
   });
-  if ((acc.children||[]).length === 1) { sel.value = acc.children[0].name; aiLoad(); }
+  if (children.length === 1) {
+    sel.value = String(children[0].id);
+    aiLoad();
+  }
 }
 
-function aiGetSessions(childName, childId) {
-  // Try all possible keys
-  const keysToTry = [];
-  if (childName) keysToTry.push(`nujoom_chats_${childName}`);
-  if (childId)   keysToTry.push(`nujoom_chats_id_${childId}`);
-  keysToTry.push('nujoom_chats_default');
-
-  const merged = new Map();
-  keysToTry.forEach(k => {
-    const data = safeJSON(k) || [];
-    data.forEach(s => { if (!merged.has(s.id)) merged.set(s.id, s); });
-  });
-  return Array.from(merged.values()).sort((a,b) => b.id - a.id);
+function _aiEscape(s) {
+  return String(s == null ? '' : s).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 
-function aiLoad() {
+function _aiFormatDate(iso) {
+  if (!iso) return { date: '—', time: '' };
+  // SQLite returns "YYYY-MM-DD HH:MM:SS" in UTC
+  const d = new Date(iso.replace(' ', 'T') + 'Z');
+  if (isNaN(d)) return { date: iso, time: '' };
+  const date = d.toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
+  const time = d.toLocaleTimeString('ar-EG', { hour:'2-digit', minute:'2-digit' });
+  return { date, time };
+}
+
+async function aiLoad() {
   const sel  = document.getElementById('aiSel');
   const list = document.getElementById('aiList');
   const stats = document.getElementById('aiStats');
   if (!sel || !list) return;
 
-  const childName = sel.value;
-  const childId   = sel.selectedOptions[0]?.dataset.id || '';
+  const childId   = sel.value;
+  const childName = sel.selectedOptions[0]?.textContent || '';
 
-  if (!childName) {
+  if (!childId) {
     list.innerHTML = '<div class="ai-empty"><span class="ai-empty-icon">👆</span><h3>اختر طفلاً</h3><p>اختر اسم الطفل لعرض محادثاته مع نجوم</p></div>';
     stats.style.display = 'none';
     return;
   }
 
-  const sessions = aiGetSessions(childName, childId);
+  list.innerHTML = '<div class="ai-empty"><span class="ai-empty-icon">⏳</span><h3>جاري التحميل…</h3></div>';
+  stats.style.display = 'none';
+
+  let sessions = [];
+  try {
+    const res = await AiChats.childList(childId);
+    if (res && res.success && Array.isArray(res.data)) sessions = res.data;
+    else if (res && res.code === 'NO_CHILD_ACCESS') {
+      list.innerHTML = '<div class="ai-empty"><span class="ai-empty-icon">🔒</span><h3>لا تملك صلاحية</h3><p>لا يمكنك عرض محادثات هذا الطفل.</p></div>';
+      return;
+    }
+  } catch (e) {
+    console.warn('aiLoad error:', e);
+  }
 
   if (sessions.length === 0) {
-    list.innerHTML = `<div class="ai-empty"><span class="ai-empty-icon">💬</span><h3>لا توجد محادثات بعد</h3><p>عندما يتحدث ${childName} مع نجوم ستظهر المحادثات هنا تلقائياً</p></div>`;
-    stats.style.display = 'none';
+    list.innerHTML = `<div class="ai-empty"><span class="ai-empty-icon">💬</span><h3>لا توجد محادثات بعد</h3><p>عندما يتحدث ${_aiEscape(childName)} مع نجوم ستظهر المحادثات هنا تلقائياً</p></div>`;
     return;
   }
 
-  // Stats
-  const totalMsgs = sessions.reduce((s,x) => s + x.messages.length, 0);
-  const totalQ    = sessions.reduce((s,x) => s + x.messages.filter(m=>m.role==='user').length, 0);
+  const totalMsgs = sessions.reduce((s,x) => s + (x.message_count || 0), 0);
+  const totalQ    = sessions.reduce((s,x) => s + (x.user_message_count || 0), 0);
   document.getElementById('aiStatSessions').textContent  = sessions.length;
   document.getElementById('aiStatMsgs').textContent      = totalMsgs;
   document.getElementById('aiStatQuestions').textContent = totalQ;
@@ -1153,28 +1183,59 @@ function aiLoad() {
 
   list.innerHTML = '';
   sessions.forEach((session, idx) => {
-    const qCount = session.messages.filter(m => m.role === 'user').length;
+    const { date, time } = _aiFormatDate(session.started_at);
+    const qCount = session.user_message_count || 0;
     const card = document.createElement('div');
-    card.className = 'ai-session-card' + (idx === 0 ? ' open' : '');
+    card.className = 'ai-session-card';
+    card.dataset.childId   = childId;
+    card.dataset.sessionId = session.id;
+    card.dataset.loaded    = '0';
     card.innerHTML = `
-      <div class="ai-sess-hdr" onclick="this.parentElement.classList.toggle('open')">
+      <div class="ai-sess-hdr" onclick="aiToggleSession(this.parentElement)">
         <div class="ai-sess-ico">⭐</div>
         <div class="ai-sess-info">
-          <h4>${session.date} — ${session.time}</h4>
-          <p>${qCount} سؤال من ${session.childName || childName}</p>
+          <h4>${_aiEscape(date)}${time ? ' — ' + _aiEscape(time) : ''}</h4>
+          <p>${qCount} سؤال من ${_aiEscape(childName)}${session.first_user_message ? ' · ' + _aiEscape(session.first_user_message.slice(0, 60)) : ''}</p>
         </div>
-        <span class="ai-sess-badge">${session.messages.length} رسالة</span>
+        <span class="ai-sess-badge">${session.message_count || 0} رسالة</span>
         <i class="fas fa-chevron-down ai-sess-arr"></i>
       </div>
-      <div class="ai-msgs-panel">
-${session.messages.map(m => `
-  <div class="ai-msg-row ${m.role === 'nujoom' ? 'ai-r' : 'user-r'}">
-    <div class="ai-msg-av">${m.role === 'nujoom' ? '⭐' : '🧒'}</div>
-    <div class="ai-msg-bbl">${(m.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
-  </div>`).join('')}
-      </div>`;
+      <div class="ai-msgs-panel"><div class="ai-msgs-loading" style="padding:16px;opacity:.6;text-align:center">…</div></div>`;
     list.appendChild(card);
+    if (idx === 0) aiToggleSession(card); // open first session
   });
+}
+
+async function aiToggleSession(card) {
+  if (!card) return;
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+  if (isOpen) return; // closing: nothing more to do
+
+  if (card.dataset.loaded === '1') return;
+  const panel = card.querySelector('.ai-msgs-panel');
+  const childId   = card.dataset.childId;
+  const sessionId = card.dataset.sessionId;
+
+  try {
+    const res = await AiChats.childMessages(childId, sessionId);
+    if (!res || !res.success || !res.data || !Array.isArray(res.data.messages)) {
+      panel.innerHTML = '<div style="padding:16px;color:#f87171">تعذّر تحميل الرسائل</div>';
+      return;
+    }
+    const msgs = res.data.messages;
+    panel.innerHTML = msgs.map(m => {
+      const isAssistant = m.role === 'assistant';
+      return `
+        <div class="ai-msg-row ${isAssistant ? 'ai-r' : 'user-r'}">
+          <div class="ai-msg-av">${isAssistant ? '⭐' : '🧒'}</div>
+          <div class="ai-msg-bbl">${_aiEscape(m.content)}</div>
+        </div>`;
+    }).join('');
+    card.dataset.loaded = '1';
+  } catch (e) {
+    panel.innerHTML = '<div style="padding:16px;color:#f87171">تعذّر تحميل الرسائل</div>';
+  }
 }
 
 // AI view ready

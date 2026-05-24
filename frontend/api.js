@@ -262,6 +262,36 @@ const Parents = {
 
 
 // ═══════════════════════════════════════════════════════════════
+// 3b. AI Chats API (parent reads child's chats; child reads own)
+// ═══════════════════════════════════════════════════════════════
+
+const AiChats = {
+    // ── Parent side (uses default `token` = parent JWT) ──
+    async childList(childId) {
+        return apiRequest(`/parents/me/children/${childId}/chats`);
+    },
+    async childMessages(childId, sessionId) {
+        return apiRequest(`/parents/me/children/${childId}/chats/${sessionId}`);
+    },
+
+    // ── Child side (uses `childToken`) ──
+    async myList() {
+        const childToken = localStorage.getItem('childToken');
+        return apiRequest('/children/me/chats', {
+            headers: childToken ? { Authorization: `Bearer ${childToken}` } : {}
+        });
+    },
+    async myMessages(sessionId) {
+        const childToken = localStorage.getItem('childToken');
+        return apiRequest(`/children/me/chats/${sessionId}`, {
+            headers: childToken ? { Authorization: `Bearer ${childToken}` } : {}
+        });
+    }
+};
+window.AiChats = AiChats;
+
+
+// ═══════════════════════════════════════════════════════════════
 // 4. Children API
 // ═══════════════════════════════════════════════════════════════
 
