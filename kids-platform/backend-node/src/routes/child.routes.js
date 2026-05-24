@@ -2,11 +2,16 @@
 
 const router = require('express').Router();
 const ctrl   = require('../controllers/child.controller');
-const { requireParent, authenticate } = require('../middleware/auth');
+const chatCtrl = require('../controllers/chat.controller');
+const { requireParent, requireChild, authenticate } = require('../middleware/auth');
 const { createChildRules } = require('../middleware/validate');
 
 // إنشاء طفل — ولي أمر فقط
 router.post('/', requireParent, createChildRules, ctrl.createChild);
+
+// محادثات الطفل مع نجوم — يجب تعريفها قبل '/:id' حتى لا تُفسَّر "me" كمعرّف
+router.get('/me/chats',             requireChild, chatCtrl.listMyChildSessions);
+router.get('/me/chats/:sessionId',  requireChild, chatCtrl.getMySessionMessages);
 
 // قراءة بيانات — يصل إليها الوالد أو الطفل نفسه
 router.get('/:id',               authenticate, ctrl.getChild);

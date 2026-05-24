@@ -114,6 +114,24 @@ CREATE TABLE IF NOT EXISTS admin_audit (
     details     TEXT
 );
 
+-- ─── جدول جلسات محادثة نجوم ─────────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_chat_sessions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    child_id        INTEGER NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+    started_at      TEXT DEFAULT (datetime('now')),
+    last_message_at TEXT DEFAULT (datetime('now')),
+    message_count   INTEGER DEFAULT 0
+);
+
+-- ─── جدول رسائل محادثة نجوم ─────────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_chat_messages (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL REFERENCES ai_chat_sessions(id) ON DELETE CASCADE,
+    role       TEXT NOT NULL CHECK(role IN ('user','assistant')),
+    content    TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
 -- ─── Indexes للأداء ──────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_children_parent    ON children(parent_id);
 CREATE INDEX IF NOT EXISTS idx_activity_child     ON activity_logs(child_id);
@@ -121,3 +139,5 @@ CREATE INDEX IF NOT EXISTS idx_activity_type      ON activity_logs(activity_type
 CREATE INDEX IF NOT EXISTS idx_achievements_child ON achievements(child_id);
 CREATE INDEX IF NOT EXISTS idx_refresh_token      ON refresh_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_drawings_child     ON drawings(child_id);
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_child   ON ai_chat_sessions(child_id, last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON ai_chat_messages(session_id, id);

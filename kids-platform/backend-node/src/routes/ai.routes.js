@@ -1,14 +1,16 @@
-// src/routes/ai.routes.js — بروكسي نجّوم للذكاء الاصطناعي
+// src/routes/ai.routes.js — بروكسي نجّوم للذكاء الاصطناعي + حفظ المحادثات
 
 const express   = require('express');
 const rateLimit = require('express-rate-limit');
 const router    = express.Router();
 const { authenticate } = require('../middleware/auth');
+const { getOne, run, transaction } = require('../database/db');
 
 const GROQ_URL      = 'https://api.groq.com/openai/v1/chat/completions';
 const AI_PROXY_URL  = process.env.AI_PROXY_URL || GROQ_URL;
 const AI_WORKER_KEY = process.env.AI_WORKER_KEY || '';
 const MODEL         = 'llama-3.3-70b-versatile';
+const SESSION_IDLE_MINUTES = 30;
 
 const MAX_MESSAGES  = 20;
 const MAX_CONTENT   = 2000;
@@ -30,13 +32,64 @@ const aiLimiter = rateLimit({
     legacyHeaders: false
 });
 
-// POST /api/ai/chat — يتطلب تسجيل دخول + rate limit
+// يعيد آخر جلسة نشطة للطفل أو ينشئ جلسة جديدة (فاصل 30د خمول)
+function getOrCreateActiveSession(childId) {
+    const latest = getOne(
+        `SELECT id, last_message_at
+           FROM ai_chat_sessions
+          WHERE child_id = ?
+          ORDER BY last_message_at DESC
+          LIMIT 1`,
+        [childId]
+    );
+
+    if (latest) {
+        const fresh = getOne(
+            `SELECT 1 AS ok
+               FROM ai_chat_sessions
+              WHERE id = ?
+                AND last_message_at >= datetime('now', ?)`,
+            [latest.id, `-${SESSION_IDLE_MINUTES} minutes`]
+        );
+        if (fresh && fresh.ok === 1) return latest.id;
+    }
+
+    const result = run(
+        `INSERT INTO ai_chat_sessions (child_id) VALUES (?)`,
+        [childId]
+    );
+    return result.lastInsertRowid;
+}
+
+function insertMessage(sessionId, role, content) {
+    transaction(() => {
+        run(
+            `INSERT INTO ai_chat_messages (session_id, role, content) VALUES (?, ?, ?)`,
+            [sessionId, role, content]
+        );
+        run(
+            `UPDATE ai_chat_sessions
+                SET message_count   = message_count + 1,
+                    last_message_at = datetime('now')
+              WHERE id = ?`,
+            [sessionId]
+        );
+    });
+}
+
+// POST /api/ai/chat — يتطلب تسجيل دخول طفل + rate limit
 router.post('/chat', aiLimiter, authenticate, async (req, res) => {
     try {
-        // Read key at request time so dotenv is guaranteed to be loaded
+        if (req.user.type !== 'child') {
+            return res.status(403).json({
+                success: false,
+                error: 'محادثة نجوم مخصصة للأطفال فقط',
+                code: 'CHILD_ONLY'
+            });
+        }
+
         const usingProxy = !!process.env.AI_PROXY_URL;
         const GROQ_API_KEY = process.env.GROQ_API_KEY;
-
         if (!usingProxy && !GROQ_API_KEY) {
             console.error('Neither AI_PROXY_URL nor GROQ_API_KEY is set');
             return res.status(500).json({ success: false, error: 'AI not configured on server' });
@@ -58,6 +111,19 @@ router.post('/chat', aiLimiter, authenticate, async (req, res) => {
         }
 
         const payload = [SYSTEM_PROMPT, ...cleaned];
+
+        const childId   = req.user.id;
+        const sessionId = getOrCreateActiveSession(childId);
+
+        // حفظ آخر رسالة من الطفل قبل استدعاء Groq (حتى لا تُفقد إن فشل الطلب)
+        const lastUserMsg = [...cleaned].reverse().find(m => m.role === 'user');
+        if (lastUserMsg && lastUserMsg.content.trim()) {
+            try {
+                insertMessage(sessionId, 'user', lastUserMsg.content.trim());
+            } catch (dbErr) {
+                console.error('Failed to persist user message:', dbErr.message);
+            }
+        }
 
         const headers = { 'Content-Type': 'application/json' };
         if (usingProxy) {
@@ -89,7 +155,16 @@ router.post('/chat', aiLimiter, authenticate, async (req, res) => {
         }
 
         const data = await groqRes.json();
-        return res.json({ success: true, data });
+        const assistantReply = data?.choices?.[0]?.message?.content;
+        if (typeof assistantReply === 'string' && assistantReply.trim()) {
+            try {
+                insertMessage(sessionId, 'assistant', assistantReply);
+            } catch (dbErr) {
+                console.error('Failed to persist assistant message:', dbErr.message);
+            }
+        }
+
+        return res.json({ success: true, data, sessionId });
 
     } catch (e) {
         console.error('AI proxy error:', e.message);

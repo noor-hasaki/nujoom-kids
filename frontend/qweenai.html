@@ -74,6 +74,8 @@ body {
   transition: all .2s;
 }
 .back-btn:hover { background: rgba(124,58,237,0.45); color: #fff; }
+.new-chat-btn { right: auto; left: 0; background: rgba(16,185,129,.22); border: 1px solid rgba(16,185,129,.4); color: #6ee7b7; cursor: pointer; }
+.new-chat-btn:hover { background: rgba(16,185,129,.42); color: #fff; }
 .header-badge {
   display: inline-flex; align-items: center; gap: 8px;
   background: rgba(124,58,237,0.25);
@@ -484,6 +486,9 @@ body {
   <!-- HEADER -->
   <div class="header">
     <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-right"></i> رجوع للوحة</a>
+    <button class="back-btn new-chat-btn" id="newChatBtn" onclick="startNewChat()" title="بدء محادثة جديدة">
+      <i class="fas fa-plus"></i> محادثة جديدة
+    </button>
     <div class="header-badge">
       <i class="fas fa-robot"></i>
       مساعد ذكاء اصطناعي · عالم التعلم
@@ -571,6 +576,8 @@ body {
 
 </div><!-- /app -->
 
+<script src="api.js"></script>
+
 <!-- INPUT BAR -->
 <div class="input-bar">
   <div class="input-inner">
@@ -621,12 +628,75 @@ let isListening = false;
 let msgCount = 1;
 let isSpeaking = false;
 
+// =================== CHAT PERSISTENCE (server-side) ===================
+// المحادثات الآن مخزّنة في قاعدة البيانات على الخادم.
+// عند الإرسال: الخادم يحفظ الرسالة تلقائياً.
+// عند فتح الصفحة: نُحضر آخر جلسة ونعيد عرض الرسائل.
+
+async function loadLatestSessionFromServer() {
+  try {
+    if (typeof AiChats === 'undefined') return;
+    const list = await AiChats.myList();
+    if (!list || !list.success || !Array.isArray(list.data) || list.data.length === 0) return;
+
+    // أحدث جلسة (الخادم يُرتّب تنازلياً)
+    const latest = list.data[0];
+    const det = await AiChats.myMessages(latest.id);
+    if (!det || !det.success || !det.data || !Array.isArray(det.data.messages)) return;
+
+    const messages = det.data.messages;
+    if (messages.length === 0) return;
+
+    // إزالة رسالة الترحيب لعرض المحادثة السابقة
+    const welcome = document.getElementById('msg-1');
+    if (welcome) welcome.remove();
+
+    chatHistory = [];
+    for (const m of messages) {
+      if (m.role === 'user') {
+        addMessage('user', m.content);
+        chatHistory.push({ role: 'user', content: m.content });
+      } else if (m.role === 'assistant') {
+        addMessage('nujoom', m.content, true);
+        chatHistory.push({ role: 'assistant', content: m.content });
+      }
+    }
+  } catch (e) {
+    console.warn('Could not load chat history from server:', e);
+  }
+}
+
+// زر "محادثة جديدة": يفرّغ الواجهة. خادم القاعدة سيفتح جلسة جديدة تلقائياً
+// عند توقف نشاط الطفل لأكثر من 30 دقيقة.
+function startNewChat() {
+  chatHistory = [];
+  const chat = document.getElementById('chatArea');
+  if (chat) {
+    chat.innerHTML = `
+      <div class="msg nujoom" id="msg-1">
+        <div class="msg-avatar nujoom-av">⭐</div>
+        <div>
+          <div class="msg-name">نجوم</div>
+          <div class="msg-bubble">أهلاً من جديد! 🌟 عن أي شيء تريد أن نتحدث الآن؟</div>
+          <div class="reactions">
+            <button class="reaction-btn" onclick="reactMsg(this,'❤️')">❤️</button>
+            <button class="reaction-btn" onclick="reactMsg(this,'👍')">👍</button>
+            <button class="reaction-btn" onclick="reactMsg(this,'😊')">😊</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  msgCount = 1;
+  document.getElementById('userInput').focus();
+}
+
 // =================== INIT ===================
 window.onload = function() {
   createStars();
   document.getElementById('userInput').focus();
   const ta = document.getElementById('userInput');
   ta.style.height = 'auto';
+  loadLatestSessionFromServer();
 };
 
 // =================== STARS ===================
