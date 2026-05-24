@@ -171,7 +171,7 @@ async function loginChild(req, res) {
         const { childId, pin } = req.body;
 
         const child = getOne(
-            'SELECT id, name, age, gender, pin, avatar_id, parent_id, is_frozen FROM children WHERE id = ?',
+            'SELECT id, name, age, gender, pin, avatar_id, parent_id, is_frozen, failed_pin_attempts, locked_until FROM children WHERE id = ?',
             [childId]
         );
 
@@ -191,14 +191,39 @@ async function loginChild(req, res) {
             });
         }
 
+        if (child.locked_until && child.locked_until > Date.now()) {
+            const mins = Math.ceil((child.locked_until - Date.now()) / 60000);
+            return res.status(423).json({
+                success: false,
+                error: `تم قفل الحساب مؤقتاً. حاول بعد ${mins} دقيقة أو اطلب من ولي أمرك إعادة التعيين`,
+                code: 'PIN_LOCKED',
+                locked_until: child.locked_until
+            });
+        }
+
         const isMatch = await bcrypt.compare(pin, child.pin);
         if (!isMatch) {
+            const attempts = (child.failed_pin_attempts || 0) + 1;
+            if (attempts >= 5) {
+                const lockedUntil = Date.now() + 15 * 60 * 1000;
+                run('UPDATE children SET failed_pin_attempts = ?, locked_until = ? WHERE id = ?', [attempts, lockedUntil, child.id]);
+                return res.status(423).json({
+                    success: false,
+                    error: 'تم قفل الحساب لمدة 15 دقيقة بسبب المحاولات المتكررة',
+                    code: 'PIN_LOCKED',
+                    locked_until: lockedUntil
+                });
+            }
+            run('UPDATE children SET failed_pin_attempts = ? WHERE id = ?', [attempts, child.id]);
             return res.status(401).json({
                 success: false,
                 error: 'PIN غير صحيح',
-                code: 'INVALID_PIN'
+                code: 'INVALID_PIN',
+                attempts_left: 5 - attempts
             });
         }
+
+        run('UPDATE children SET failed_pin_attempts = 0, locked_until = NULL WHERE id = ?', [child.id]);
 
         const tokenPayload = {
             id: child.id,
@@ -335,7 +360,7 @@ async function loginChildByName(req, res) {
 
         // البحث عن جميع الأطفال بهذا الاسم
         const children = require('../database/db').getAll(
-            'SELECT id, name, age, gender, pin, avatar_id, parent_id, is_frozen FROM children WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))',
+            'SELECT id, name, age, gender, pin, avatar_id, parent_id, is_frozen, failed_pin_attempts, locked_until FROM children WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))',
             [name]
         );
 
@@ -347,21 +372,36 @@ async function loginChildByName(req, res) {
             });
         }
 
-        // تجربة PIN مع كل طفل بنفس الاسم
+        // تجربة PIN مع كل طفل بنفس الاسم (متاح وغير مقفل)
         let matchedChild = null;
         for (const child of children) {
             if (child.is_frozen) continue;
+            if (child.locked_until && child.locked_until > Date.now()) continue;
             const isMatch = await bcrypt.compare(pin, child.pin);
             if (isMatch) { matchedChild = child; break; }
         }
 
         if (!matchedChild) {
+            // زيادة عداد المحاولات لكل طفل غير مجمّد وغير مقفل بهذا الاسم
+            for (const child of children) {
+                if (child.is_frozen) continue;
+                if (child.locked_until && child.locked_until > Date.now()) continue;
+                const attempts = (child.failed_pin_attempts || 0) + 1;
+                if (attempts >= 5) {
+                    const lockedUntil = Date.now() + 15 * 60 * 1000;
+                    run('UPDATE children SET failed_pin_attempts = ?, locked_until = ? WHERE id = ?', [attempts, lockedUntil, child.id]);
+                } else {
+                    run('UPDATE children SET failed_pin_attempts = ? WHERE id = ?', [attempts, child.id]);
+                }
+            }
             return res.status(401).json({
                 success: false,
                 error: 'الاسم أو الرمز السري غير صحيح',
                 code: 'INVALID_CREDENTIALS'
             });
         }
+
+        run('UPDATE children SET failed_pin_attempts = 0, locked_until = NULL WHERE id = ?', [matchedChild.id]);
 
         const tokenPayload = {
             id: matchedChild.id,

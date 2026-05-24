@@ -15,6 +15,9 @@ router.get('/:id/activities',    authenticate, ctrl.getChildActivities);
 router.get('/:id/achievements',  authenticate, ctrl.getChildAchievements);
 router.get('/:id/stats/summary', requireParent, ctrl.getChildStatsSummary);
 
+// إعادة تعيين قفل PIN — ولي أمر فقط
+router.post('/:id/unlock', requireParent, ctrl.unlockChild);
+
 // تعديل — ولي أمر فقط
 router.put('/:id',    requireParent, ctrl.updateChild);
 

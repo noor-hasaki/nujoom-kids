@@ -2,11 +2,13 @@
 
 require('dotenv').config();
 
-const express  = require('express');
-const cors     = require('cors');
-const helmet   = require('helmet');
-const path     = require('path');
-const fs       = require('fs');
+const express      = require('express');
+const cors         = require('cors');
+const helmet       = require('helmet');
+const cookieParser = require('cookie-parser');
+const crypto       = require('crypto');
+const path         = require('path');
+const fs           = require('fs');
 
 const app = express();
 
@@ -14,6 +16,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 // ── الـ Middleware الأساسية ────────────────────────────────────
+app.use(cookieParser());
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -94,6 +97,34 @@ if (!frontendPath) {
         }
     }
 }
+
+// Gate admin.html — key via query param (first visit) or httpOnly cookie (subsequent)
+app.get('/admin.html', (req, res) => {
+    const key    = req.query.key || req.cookies?.admin_key;
+    const secret = process.env.INTERNAL_ADMIN_API_KEY;
+
+    let valid = false;
+    if (key && secret) {
+        try {
+            const a = Buffer.from(key);
+            const b = Buffer.from(secret);
+            valid = a.length === b.length && crypto.timingSafeEqual(a, b);
+        } catch (_) {}
+    }
+
+    if (!valid) return res.status(404).send('Not found');
+
+    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+    res.cookie('admin_key', key, {
+        httpOnly: true,
+        secure:   isSecure,
+        sameSite: 'strict',
+        maxAge:   3_600_000
+    });
+
+    if (!frontendPath) return res.status(503).send('Frontend not found');
+    res.sendFile(path.join(frontendPath, 'admin.html'));
+});
 
 if (frontendPath) {
     console.log('✅ Frontend found');

@@ -81,6 +81,19 @@ const childLoginRules = [
     handleValidation
 ];
 
+// ── قواعد تسجيل دخول الطفل بالاسم + PIN ─────────────────────
+const childLoginByNameRules = [
+    body('name')
+        .trim()
+        .notEmpty().withMessage('اسم الطفل مطلوب')
+        .isLength({ min: 2, max: 30 }).withMessage('الاسم يجب أن يكون بين 2 و 30 حرف'),
+
+    body('pin')
+        .matches(/^\d{4}$/).withMessage('PIN يجب أن يكون 4 أرقام بالضبط'),
+
+    handleValidation
+];
+
 // ── قواعد تسجيل النشاط ───────────────────────────────────────
 const activityRules = [
     body('activityType')
@@ -117,6 +130,7 @@ module.exports = {
     loginRules,
     createChildRules,
     childLoginRules,
+    childLoginByNameRules,
     activityRules,
     idParamRule
 };
