@@ -1,0 +1,11 @@
+# رؤوس الحماية للملفات الثابتة.
+# الملفات الثابتة تُقدَّم دون المرور بالـ Worker، فلا يصلها secureHeaders —
+# لذلك نضبط نفس سياسة helmet القديمة هنا.
+# ملاحظة: هذا الملف يخصّ Cloudflare Workers/Pages فقط، ويُتجاهل عند تقديم
+# المجلد عبر express.static في الخادم القديم.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: DENY

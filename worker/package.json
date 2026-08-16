@@ -1,0 +1,26 @@
+{
+  "name": "nujoom-worker",
+  "version": "1.0.0",
+  "description": "منصة نجوم التعلم — Cloudflare Worker + D1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "types": "wrangler types",
+    "db:local": "wrangler d1 migrations apply nujoom-db --local",
+    "db:remote": "wrangler d1 migrations apply nujoom-db --remote"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "hono": "^4.6.14",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260811.1",
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.123.0"
+  }
+}
